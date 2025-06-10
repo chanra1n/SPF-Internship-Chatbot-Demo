@@ -1,0 +1,235 @@
+html {
+            font-size: 16px; /* Base font size for rem unit calculations */
+            box-sizing: border-box;
+        }
+        *, *::before, *::after {
+            box-sizing: inherit;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+    min-height: 100vh;
+    /* min-width: 100vw; */
+    width: 100%;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    background: var(--humboldt-cream, #f7f4e9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-family: 'Poppins', sans-serif;
+    background-image: url('background.png');
+    background-size: cover;
+    background-position: center;
+        }
+        #chatbot-container {
+            width: 100vw;
+            height: 100vh;
+            max-width: none; /* These are fine for full screen */
+            max-height: none;
+            margin: 0;
+            border-radius: 0;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            background: transparent;
+            /* font-family: 'Poppins', sans-serif; */ /* Moved to body */
+            overflow: hidden;
+        }
+        #chatbot-header {
+            background: linear-gradient(135deg, rgba(0, 99, 65, 0.75) 0%, rgba(0, 99, 65, 0.55) 100%);
+            color: #fff;
+            padding: 1.75rem 2.25rem; /* 28px 36px */
+            font: 700 1.8rem 'Poppins', sans-serif; /* Adjusted from 1.6em for clarity and slight increase */
+            letter-spacing: 1px;
+            text-align: center;
+            backdrop-filter: blur(12px) saturate(160%);
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 4px 16px 0 rgba(0,0,0,0.10);
+        }
+        #chatbot-messages {
+            flex: 1 1 auto;
+            padding: 2rem; /* 32px */
+            min-height: 0;
+            max-height: none;
+            overflow-y: auto;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .chatbot-msg {
+            margin-bottom: 1.125rem; /* 18px */
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            align-items: flex-start;
+            opacity: 0;
+            animation: chatbotPopIn 0.54s cubic-bezier(0.68, -0.3, 0.32, 1.15) forwards;
+        }
+        .chatbot-msg.user {
+            align-items: flex-end;
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        @keyframes chatbotPopIn {
+            0% {
+                opacity: 0;
+                transform: translateY(32px) scale(0.97);
+                filter: blur(8px);
+            }
+            60% {
+                opacity: 1;
+                transform: translateY(-4px) scale(1.015);
+                filter: blur(0);
+            }
+            80% {
+                transform: translateY(1px) scale(0.99);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+        }
+        .chatbot-bubble {
+            padding: 1.125rem 1.5rem; /* 18px 24px */
+            border-radius: 10px; /* 1.25rem -> 20px */
+            max-width: 70vw;
+            font: 1.1rem/1.7 'Poppins', sans-serif; /* Adjusted from 1.18em */
+            box-shadow: 0 5px 24px 0 rgba(0,0,0,0.13);
+            min-width: 3.75rem; /* 60px */
+            min-height: 2rem; /* 32px */
+            word-break: break-word;
+            transition: background 0.2s cubic-bezier(0.68, -0.55, 0.27, 1.55), color 0.2s cubic-bezier(0.68, -0.55, 0.27, 1.55), transform 0.2s cubic-bezier(0.68, -0.55, 0.27, 1.55), box-shadow 0.2s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            backdrop-filter: blur(10px) saturate(150%);
+            border: 1px solid rgba(255,255,255,0.13);
+        }
+        .chatbot-bubble.bot {
+    background: linear-gradient(135deg, rgba(0, 99, 65, 0.7) 0%, rgba(0, 99, 65, 0.5) 100%);
+    color: #fff;
+    border-radius: 10px 10px 10px 0px; /* 1rem -> 16px, 0rem -> 0px */
+        }
+        .chatbot-bubble.user {
+            background: linear-gradient(135deg, rgba(255, 199, 44, 0.75) 0%, rgba(255, 199, 44, 0.55) 100%);
+            color: #004d2c;
+            /* top-left, top-right, bottom-right, bottom-left */
+            border-radius: 10px 10px 0px 10px; /* 1.25rem -> 20px, 0.375rem -> 6px */
+        }
+        #chatbot-options {
+            flex: 0 0 auto;
+            padding: 1.5rem 0 2rem 0; /* 24px 0 32px 0 */
+            background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.07) 100%);
+            border-top: 1px solid rgba(255,255,255,0.15);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.125rem; /* 18px */
+            justify-content: center;
+            backdrop-filter: blur(12px) saturate(160%);
+            box-shadow: 0 -3px 12px 0 rgba(0,0,0,0.08);
+        }
+        .chatbot-option-btn {
+            background: linear-gradient(135deg, rgba(0, 99, 65, 0.55) 0%, rgba(0, 99, 65, 0.35) 100%);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.13);
+            border-radius: 10px; /* 0.625rem -> 10px */
+            padding: 1rem 1.75rem; /* 16px 28px */
+            font: 600 1rem 'Poppins', sans-serif; /* Adjusted from 1.1em */
+            cursor: pointer;
+            transition: background 0.2s cubic-bezier(0.68, -0.55, 0.27, 1.55), color 0.2s cubic-bezier(0.68, -0.55, 0.27, 1.55), transform 0.18s cubic-bezier(0.68, -0.55, 0.27, 1.55), box-shadow 0.2s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            box-shadow: 0 3px 12px 0 rgba(0,0,0,0.13);
+            backdrop-filter: blur(8px) saturate(140%);
+            opacity: 0;
+            animation: chatbotPopIn 0.56s cubic-bezier(0.68, -0.3, 0.32, 1.15) forwards;
+            animation-delay: 0.1s;
+        }
+        .chatbot-option-btn:hover {
+            background: linear-gradient(135deg, rgba(255, 199, 44, 0.65) 0%, rgba(255, 199, 44, 0.45) 100%);
+            color: #004d2c;
+            transform: scale(1.06);
+            box-shadow: 0 5px 18px 0 rgba(0,0,0,0.18);
+        }
+        @media (max-width: 900px) { /* Tablet and large phones */
+            #chatbot-header {
+                font: 700 1.6rem 'Poppins', sans-serif;
+                padding: 1.5rem 1.875rem; /* 24px 30px */
+            }
+            .chatbot-bubble {
+                max-width: 85vw;
+                font: 1.05rem/1.7 'Poppins', sans-serif;
+            }
+            .chatbot-option-btn {
+                font: 600 0.95rem 'Poppins', sans-serif;
+                padding: 0.875rem 1.5rem; /* 14px 24px */
+            }
+        }
+        @media (max-width: 600px) { /* Mobile phones */
+            html {
+                font-size: 18px; /* Increase base font size for mobile */
+            }
+            body {
+                 /* Ensure body itself doesn't cause overflow if children are managed with vw */
+                /* overflow-x: hidden; /* Already on html, body */
+            }
+            #chatbot-container {
+                /* width: 100%; Ensure it doesn't exceed viewport */
+            }
+            #chatbot-header {
+                font: 700 1.4rem 'Poppins', sans-serif; /* Scales with new 18px base: ~25px */
+                padding: 1rem 4vw;
+                letter-spacing: 0.5px;
+            }
+            #chatbot-messages {
+                padding: 1rem 3vw;
+            }
+            .chatbot-bubble {
+                font: 1rem/1.6 'Poppins', sans-serif; /* Scales with new 18px base: 18px */
+                padding: 0.8rem 1rem;
+                max-width: 95vw; /* Use most of the width */
+                min-width: 0;
+            }
+            #chatbot-options {
+                padding: 1rem 3vw;
+                gap: 0.8rem;
+                flex-direction: column;
+                align-items: stretch; /* Make buttons full width */
+            }
+            .chatbot-option-btn {
+                font: 600 1rem 'Poppins', sans-serif; /* Scales with new 18px base: 18px */
+                padding: 1rem 0.75rem; /* Generous padding for touch */
+                min-width: 0;
+                width: auto; /* Allow stretching by flex container */
+                border-radius: 10px; /* 0.8rem at 18px base font -> 14.4px, rounded to 14px */
+            }
+        }
+        @media (max-width: 400px) { /* Smaller mobile phones */
+            html {
+                font-size: 17px; /* Slightly adjust base font for very small screens if needed */
+            }
+            #chatbot-header {
+                font: 700 1.3rem 'Poppins', sans-serif; /* ~22px */
+                padding: 0.8rem 3vw;
+                /* letter-spacing will inherit from previous media query or base */
+            }
+            #chatbot-messages {
+                padding: 0.8rem 2vw;
+            }
+            .chatbot-bubble {
+                font: 0.95rem/1.5 'Poppins', sans-serif; /* ~16px */
+                padding: 0.7rem 0.8rem;
+            }
+            #chatbot-options {
+                padding: 0.8rem 2vw;
+                gap: 0.7rem;
+            }
+            .chatbot-option-btn {
+                font: 600 0.95rem 'Poppins', sans-serif; /* ~16px */
+                padding: 0.9rem 0.5rem;
+            }
+        }
