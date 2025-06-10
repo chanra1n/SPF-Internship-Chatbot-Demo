@@ -85,9 +85,21 @@
             options.forEach((opt, idx) => {
                 const btn = document.createElement('button');
                 btn.className = 'chatbot-option-btn';
-                btn.textContent = opt.label;
+                // Add icon in a circle if provided
+                if (opt.icon) {
+                    const iconCircle = document.createElement('div');
+                    iconCircle.className = 'chatbot-btn-icon-circle';
+                    const icon = document.createElement('i');
+                    icon.className = `ri-${opt.icon}`;
+                    icon.setAttribute('aria-hidden', 'true');
+                    iconCircle.appendChild(icon);
+                    btn.appendChild(iconCircle);
+                }
+                const labelSpan = document.createElement('span');
+                labelSpan.className = 'chatbot-btn-label';
+                labelSpan.textContent = opt.label;
+                btn.appendChild(labelSpan);
                 btn.onclick = () => opt.onClick();
-                // Animate each button with a slight stagger
                 btn.style.animationDelay = (0.08 * idx) + 's';
                 optArea.appendChild(btn);
                 // Force reflow to restart animation if needed
@@ -102,11 +114,11 @@
             document.getElementById('chatbot-messages').innerHTML = '';
             addMessage("Hi! 👋 I'm here to help you find the right experiential learning opportunity. What are you most interested in?", "bot", () => {
                 setOptions([
-                    { label: "Internships", onClick: () => chatbotChooseType("internship") },
-                    { label: "Research", onClick: () => chatbotChooseType("research") },
-                    { label: "Service Learning", onClick: () => chatbotChooseType("service") },
-                    { label: "Job Shadowing", onClick: () => chatbotChooseType("shadowing") },
-                    { label: "Show all", onClick: () => chatbotShowResults([]) }
+                    { label: "Internships", icon: "briefcase-line", onClick: () => chatbotChooseType("internship") },
+                    { label: "Research", icon: "flask-line", onClick: () => chatbotChooseType("research") },
+                    { label: "Service Learning", icon: "heart-line", onClick: () => chatbotChooseType("service") },
+                    { label: "Job Shadowing", icon: "eye-line", onClick: () => chatbotChooseType("shadowing") },
+                    { label: "Show all", icon: "apps-2-line", onClick: () => chatbotShowResults([]) }
                 ]);
             });
         }
@@ -117,10 +129,10 @@
             if (type === "internship") {
                 addMessage("Great! What kind of internship are you looking for?", "bot", () => {
                     setOptions([
-                        { label: "Academic (for course credit)", onClick: () => chatbotAddFilter("course credit") },
-                        { label: "Paid (company/industry)", onClick: () => chatbotAddFilter("paid") },
-                        { label: "Clinical/Practicum", onClick: () => chatbotAddFilter("clinical") },
-                        { label: "Back", onClick: chatbotStart }
+                        { label: "Academic (for course credit)", icon: "book-open-line", onClick: () => chatbotAddFilter("course credit") },
+                        { label: "Paid (company/industry)", icon: "money-dollar-circle-line", onClick: () => chatbotAddFilter("paid") },
+                        { label: "Clinical/Practicum", icon: "stethoscope-line", onClick: () => chatbotAddFilter("clinical") },
+                        { label: "Back", icon: "arrow-go-back-line", onClick: chatbotStart }
                     ]);
                 });
             } else if (type === "research") {
