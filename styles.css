@@ -23,7 +23,6 @@ html {
     justify-content: center;
     overflow: hidden;
     font-family: 'Poppins', sans-serif;
-    background-image: url('background.png');
     background-size: cover;
     background-position: center;
         }
@@ -44,8 +43,8 @@ html {
         #chatbot-header {
             background: linear-gradient(135deg, rgba(0, 99, 65, 0.75) 0%, rgba(0, 99, 65, 0.55) 100%);
             color: #fff;
-            padding: 1.75rem 2.25rem; /* 28px 36px */
-            font: 700 1.8rem 'Poppins', sans-serif; /* Adjusted from 1.6em for clarity and slight increase */
+            padding: 0.8rem 1.2rem; /* Reduced from 1.75rem 2.25rem */
+            font: 700 1.2rem 'Poppins', sans-serif; /* Reduced from 1.8rem */
             letter-spacing: 1px;
             text-align: center;
             backdrop-filter: blur(12px) saturate(160%);
@@ -133,6 +132,7 @@ html {
             justify-content: center;
             backdrop-filter: blur(12px) saturate(160%);
             box-shadow: 0 -3px 12px 0 rgba(0,0,0,0.08);
+            border-radius: 20px 20px 0px 0px;
         }
         .chatbot-option-btn {
             display: flex;
@@ -214,8 +214,8 @@ html {
 }
         @media (max-width: 900px) { /* Tablet and large phones */
             #chatbot-header {
-                font: 700 1.6rem 'Poppins', sans-serif;
-                padding: 1.5rem 1.875rem; /* 24px 30px */
+                font: 700 1.05rem 'Poppins', sans-serif;
+                padding: 0.7rem 1rem;
             }
             .chatbot-bubble {
                 max-width: 85vw;
@@ -238,8 +238,8 @@ html {
                 /* width: 100%; Ensure it doesn't exceed viewport */
             }
             #chatbot-header {
-                font: 700 1.4rem 'Poppins', sans-serif; /* Scales with new 18px base: ~25px */
-                padding: 1rem 4vw;
+                font: 700 1rem 'Poppins', sans-serif;
+                padding: 0.6rem 0.7rem;
                 letter-spacing: 0.5px;
             }
             #chatbot-messages {
@@ -270,9 +270,8 @@ html {
                 font-size: 17px; /* Slightly adjust base font for very small screens if needed */
             }
             #chatbot-header {
-                font: 700 1.3rem 'Poppins', sans-serif; /* ~22px */
-                padding: 0.8rem 3vw;
-                /* letter-spacing will inherit from previous media query or base */
+                font: 700 0.95rem 'Poppins', sans-serif;
+                padding: 0.5rem 0.4rem;
             }
             #chatbot-messages {
                 padding: 0.8rem 2vw;

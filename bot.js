@@ -42,11 +42,113 @@
             }
         ];
 
+        // Example majors (expand as needed)
+        const majors = [
+            "Biology", "Business", "Psychology", "Social Work", "Education", "Engineering", "Art", "Other"
+        ];
+
+        // Example departments for demo purposes
+        const departmentAttributes = {
+            "Biology": ["research", "faculty help", "career-relevant skills"],
+            "Business": ["paid", "career-relevant skills"],
+            "Psychology": ["practicum", "required", "faculty help"],
+            "Social Work": ["clinical", "required", "faculty help"],
+            "Education": ["required", "off-campus", "faculty help"],
+            "Engineering": ["paid", "internship", "career-relevant skills"],
+            "Art": ["internship", "faculty help"],
+            "Other": []
+        };
+
+        // Offices info cards
+        const offices = [
+            {
+                name: "Career Development Center",
+                info: "The Career Development Center advertises paid jobs, internships, and fellowships through Handshake. They host career fairs and offer resume and job application help.",
+                tags: ["paid", "career", "Handshake"]
+            },
+            {
+                name: "Center for Community Based Learning (CCBL)",
+                info: "CCBL supports course-based, hands-on learning: internships, practicums, and service learning. They help with course design, S4 reporting, and community connections.",
+                tags: ["internship", "service learning", "practicum"]
+            },
+            {
+                name: "Youth Educational Services (YES)",
+                info: "YES offers volunteer opportunities, events, and leadership roles. Time commitment varies by program.",
+                tags: ["volunteer", "leadership", "community"]
+            },
+            {
+                name: "College Corps",
+                info: "College Corps is a service fellowship: $10,000 for 450 hours of service in education, climate, or food insecurity. Hours may count for other requirements.",
+                tags: ["service", "fellowship", "paid"]
+            },
+            {
+                name: "SPF Engagement Hub",
+                info: "SPF Engagement Hub lists externally funded fellowships, research, and paid internships for students and faculty. Opportunities change dynamically.",
+                tags: ["fellowship", "research", "paid"]
+            },
+            {
+                name: "Library",
+                info: "The Library offers paid, on-campus internships involving research and scholarship, available year-round.",
+                tags: ["paid", "research", "on-campus"]
+            }
+        ];
+
         // Chatbot state
         let chatbotState = {
+            mode: "student",
             step: 0,
-            filters: []
+            filters: [],
+            major: null
         };
+
+        // Helper to show filter tags
+        function showFilterTags() {
+            const tagAreaId = "chatbot-filter-tags";
+            let tagArea = document.getElementById(tagAreaId);
+            if (!tagArea) {
+                tagArea = document.createElement('div');
+                tagArea.id = tagAreaId;
+                tagArea.style.display = "flex";
+                tagArea.style.flexWrap = "wrap";
+                tagArea.style.gap = "0.5em";
+                tagArea.style.justifyContent = "center";
+                tagArea.style.margin = "0.5em 0";
+                document.getElementById('chatbot-messages').parentNode.insertBefore(tagArea, document.getElementById('chatbot-messages').nextSibling);
+            }
+            tagArea.innerHTML = "";
+            if (chatbotState.major) {
+                const tag = document.createElement('span');
+                tag.className = "chatbot-filter-tag";
+                tag.textContent = chatbotState.major;
+                tagArea.appendChild(tag);
+            }
+            chatbotState.filters.forEach(f => {
+                const tag = document.createElement('span');
+                tag.className = "chatbot-filter-tag";
+                tag.textContent = f;
+                tagArea.appendChild(tag);
+            });
+        }
+
+        // Add CSS for filter tags (only once)
+        if (!document.getElementById('chatbot-filter-tag-style')) {
+            const style = document.createElement('style');
+            style.id = 'chatbot-filter-tag-style';
+            style.innerHTML = `
+                .chatbot-filter-tag {
+                    background: rgba(0,99,65,0.09);
+                    color: #006341;
+                    border-radius: 12px;
+                    padding: 0.2em 0.8em;
+                    font-size: 0.95em;
+                    font-weight: 500;
+                    margin: 0 0.1em;
+                    border: 1px solid #e3f1e6;
+                    display: inline-block;
+                }
+            `;
+            document.head.appendChild(style);
+        }
 
         // Typing animation for bot messages
         function addMessage(text, sender = "bot", cb) {
@@ -110,69 +212,139 @@
 
         // Chatbot logic steps
         function chatbotStart() {
-            chatbotState = { step: 0, filters: [] };
+            chatbotState = { mode: "student", step: 0, filters: [], major: null };
             document.getElementById('chatbot-messages').innerHTML = '';
-            addMessage("Hi! 👋 I'm here to help you find the right experiential learning opportunity. What are you most interested in?", "bot", () => {
+            showFilterTags();
+            addMessage("Opportunity awaits! What would you like to learn more about?", "bot", () => {
                 setOptions([
-                    { label: "Internships", icon: "briefcase-line", onClick: () => chatbotChooseType("internship") },
-                    { label: "Research", icon: "flask-line", onClick: () => chatbotChooseType("research") },
-                    { label: "Service Learning", icon: "heart-line", onClick: () => chatbotChooseType("service") },
-                    { label: "Job Shadowing", icon: "eye-line", onClick: () => chatbotChooseType("shadowing") },
-                    { label: "Show all", icon: "apps-2-line", onClick: () => chatbotShowResults([]) }
+                    { label: "I'm a Student", icon: "user-line", onClick: () => chatbotChooseMode("student") },
+                    { label: "I'm Faculty/Staff", icon: "graduation-cap-line", onClick: () => chatbotChooseMode("faculty") },
+                    { label: "I'm a Community Partner", icon: "team-line", onClick: () => chatbotChooseMode("community") }
                 ]);
             });
         }
 
-        function chatbotChooseType(type) {
-            chatbotState.filters.push(type);
-            addMessage(type.charAt(0).toUpperCase() + type.slice(1), "user");
-            if (type === "internship") {
-                addMessage("Great! What kind of internship are you looking for?", "bot", () => {
-                    setOptions([
-                        { label: "Academic (for course credit)", icon: "book-open-line", onClick: () => chatbotAddFilter("course credit") },
-                        { label: "Paid (company/industry)", icon: "money-dollar-circle-line", onClick: () => chatbotAddFilter("paid") },
-                        { label: "Clinical/Practicum", icon: "stethoscope-line", onClick: () => chatbotAddFilter("clinical") },
-                        { label: "Back", icon: "arrow-go-back-line", onClick: chatbotStart }
-                    ]);
-                });
-            } else if (type === "research") {
-                chatbotShowResults(["research"]);
-            } else if (type === "service") {
-                chatbotShowResults(["service"]);
-            } else if (type === "shadowing") {
-                chatbotShowResults(["shadowing"]);
-            }
-        }
-
-        function chatbotAddFilter(filter) {
-            chatbotState.filters.push(filter);
-            addMessage(filter.charAt(0).toUpperCase() + filter.slice(1), "user");
-            chatbotShowResults(chatbotState.filters);
-        }
-
-        function chatbotShowResults(filters) {
-            let results = experiences;
-            if (filters.length) {
-                results = results.filter(exp =>
-                    filters.every(f => exp.tags.some(tag => tag.includes(f)))
-                );
-            }
-            if (results.length === 0) {
-                addMessage("Sorry, I couldn't find any experiences matching your choices. Try another option!", "bot", () => {
-                    setOptions([{ label: "Start Over", onClick: chatbotStart }]);
+        function chatbotChooseMode(mode) {
+            chatbotState.mode = mode;
+            addMessage(
+                mode === "student"
+                    ? "Student"
+                    : mode === "faculty"
+                    ? "Faculty/Staff"
+                    : "Community Partner",
+                "user"
+            );
+            if (mode !== "student") {
+                addMessage("Student mode is the main focus for this demo. Please select 'I'm a Student' to continue.", "bot", () => {
+                    setOptions([{ label: "Back", icon: "arrow-go-back-line", onClick: chatbotStart }]);
                 });
                 return;
             }
-            addMessage("Here are some opportunities you might be interested in:", "bot", () => {
-                // Show each result with a typing effect, one after another
+            chatbotAskMajor();
+        }
+
+        function chatbotAskMajor() {
+            addMessage("What's your major?", "bot", () => {
+                setOptions(
+                    majors.map(m => ({
+                        label: m,
+                        icon: "book-mark-line",
+                        onClick: () => chatbotSetMajor(m)
+                    }))
+                );
+            });
+        }
+
+        function chatbotSetMajor(major) {
+            chatbotState.major = major;
+            addMessage(major, "user");
+            showFilterTags();
+            chatbotAskFilters();
+        }
+
+        function chatbotAskFilters() {
+            addMessage("What are you looking for?", "bot", () => {
+                setOptions([
+                    { label: "Internships", icon: "briefcase-line", onClick: () => chatbotAddFilter("internship") },
+                    { label: "Research", icon: "flask-line", onClick: () => chatbotAddFilter("research") },
+                    { label: "Service Learning", icon: "heart-line", onClick: () => chatbotAddFilter("service learning") },
+                    { label: "Job Shadowing", icon: "eye-line", onClick: () => chatbotAddFilter("shadowing") },
+                    { label: "Paid", icon: "money-dollar-circle-line", onClick: () => chatbotAddFilter("paid") },
+                    { label: "On Campus", icon: "home-2-line", onClick: () => chatbotAddFilter("on-campus") },
+                    { label: "Off Campus", icon: "road-map-line", onClick: () => chatbotAddFilter("off-campus") },
+                    { label: "Academic Year", icon: "calendar-event-line", onClick: () => chatbotAddFilter("academic year") },
+                    { label: "Summer", icon: "sun-line", onClick: () => chatbotAddFilter("summer") },
+                    { label: "Course Credit", icon: "award-line", onClick: () => chatbotAddFilter("course credit") },
+                    { label: "Show Results", icon: "search-line", onClick: () => chatbotShowResults(chatbotState.filters) },
+                    { label: "Start Over", icon: "refresh-line", onClick: chatbotStart }
+                ]);
+            });
+        }
+
+        function chatbotAddFilter(filter) {
+            if (!chatbotState.filters.includes(filter)) {
+                chatbotState.filters.push(filter);
+            }
+            addMessage(filter.charAt(0).toUpperCase() + filter.slice(1), "user");
+            showFilterTags();
+            chatbotAskFilters();
+        }
+
+        function chatbotShowResults(filters) {
+            showFilterTags();
+            let results = experiences;
+            // Filter by major (department attributes)
+            if (chatbotState.major && departmentAttributes[chatbotState.major]) {
+                results = results.filter(exp =>
+                    departmentAttributes[chatbotState.major].some(tag =>
+                        exp.tags.includes(tag)
+                    ) || exp.tags.includes(chatbotState.major.toLowerCase())
+                );
+            }
+            // Filter by selected filters
+            if (filters.length) {
+                results = results.filter(exp =>
+                    filters.every(f =>
+                        exp.tags.some(tag => tag.toLowerCase().includes(f.toLowerCase()))
+                    )
+                );
+            }
+            if (results.length === 0) {
+                addMessage("No matches found. Try different filters.", "bot", () => {
+                    setOptions([{ label: "Start Over", icon: "refresh-line", onClick: chatbotStart }]);
+                });
+                return;
+            }
+            addMessage("Here are some opportunities for you:", "bot", () => {
                 function showNext(i) {
                     if (i < results.length) {
-                        addMessage(`• ${results[i].name}\n${results[i].info}`, "bot", () => showNext(i + 1));
+                        // Show tags for each result
+                        const tagStr = results[i].tags.map(t => `#${t}`).join(' ');
+                        addMessage(
+                            `If you're interested in ${results[i].name}, check out:\n${results[i].info}\n${tagStr}`,
+                            "bot",
+                            () => showNext(i + 1)
+                        );
                     } else {
-                        setOptions([{ label: "Start Over", onClick: chatbotStart }]);
+                        // Show info cards for offices
+                        chatbotShowOffices();
                     }
                 }
                 showNext(0);
+            });
+        }
+
+        function chatbotShowOffices() {
+            addMessage("Campus offices that can help:", "bot", () => {
+                function showOffice(i) {
+                    if (i < offices.length) {
+                        const tagStr = offices[i].tags.map(t => `#${t}`).join(' ');
+                        addMessage(`${offices[i].name}: ${offices[i].info}\n${tagStr}`, "bot", () => showOffice(i + 1));
+                    } else {
+                        setOptions([{ label: "Start Over", icon: "refresh-line", onClick: chatbotStart }]);
+                    }
+                }
+                showOffice(0);
             });
         }
 
