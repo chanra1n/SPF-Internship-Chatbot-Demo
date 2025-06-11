@@ -149,23 +149,31 @@ function addMessage(text, sender = "bot", cb) {
     // Always scroll to bottom after any change
     setTimeout(scrollMessagesToBottom, 0);
 
-    if (sender === "bot") {
-        let i = 0;
-        function typeChar() {
-            if (i <= text.length) {
+if (sender === "bot") {
+    // If the text contains HTML tags, use innerHTML for the final output
+    let isHtml = /<\/?[a-z][\s\S]*>/i.test(text);
+    let i = 0;
+    function typeChar() {
+        if (i <= text.length) {
+            if (isHtml) {
+                // Show all at once if HTML (no typing animation)
+                bubble.innerHTML = text;
+                if (cb) cb();
+            } else {
                 bubble.textContent = text.slice(0, i);
                 scrollMessagesToBottom();
                 i++;
-                setTimeout(typeChar, text.length > 60 ? 8 : 18); // faster for longer text
-            } else if (cb) {
-                cb();
+                setTimeout(typeChar, text.length > 60 ? 8 : 18);
             }
+        } else if (cb) {
+            cb();
         }
-        typeChar();
-    } else {
-        bubble.textContent = text;
-        if (cb) cb();
     }
+    typeChar();
+} else {
+    bubble.textContent = text;
+    if (cb) cb();
+}
     // Scroll to bottom again after animation
     setTimeout(scrollMessagesToBottom, 100);
 }
@@ -802,7 +810,54 @@ function summarizeInfo(info) {
     return sentences.slice(0, 2).join(' ').trim();
 }
 
+// Add a loading overlay inside the options container if not present
+function ensureLoadingOverlay() {
+    const optionsDrawer = document.getElementById('chatbot-options-drawer');
+    if (!optionsDrawer) return;
+    if (!document.getElementById('chatbot-loading-overlay')) {
+        const overlay = document.createElement('div');
+        overlay.id = 'chatbot-loading-overlay';
+        overlay.style.position = 'absolute';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.background = 'transparent';
+        overlay.style.backdropFilter = 'blur(20px)';
+        overlay.style.display = 'none';
+        overlay.style.zIndex = '999';
+        overlay.style.pointerEvents = 'all';
+        overlay.style.justifyContent = 'center';
+        overlay.style.alignItems = 'center';
+        overlay.style.display = 'none';
+        overlay.style.transition = 'opacity 0.2s';
+        overlay.innerHTML = `<div style="font-size:2rem;color:#00695c;display:flex;align-items:center;gap:0.7em;">
+            <span class="ri-loader-4-line" style="animation:spin 1s linear infinite;"></span>
+        </div>
+        <style>
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        </style>`;
+        optionsDrawer.style.position = 'relative';
+        optionsDrawer.appendChild(overlay);
+    }
+}
+
+function showLoadingOverlay() {
+    ensureLoadingOverlay();
+    const overlay = document.getElementById('chatbot-loading-overlay');
+    if (overlay) overlay.style.display = 'flex';
+}
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('chatbot-loading-overlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
 // Start chatbot on page load
 window.onload = function() {
+    // Always reload the page to ensure the most recent version is loaded
+    if (window.performance && window.performance.navigation.type === window.performance.navigation.TYPE_BACK_FORWARD) {
+        window.location.reload(true);
+        return;
+    }
     chatbotStart();
 };
