@@ -4,6 +4,7 @@ let experiences = [];
 let offices = [];
 let majors = [];
 let departmentAttributes = {};
+let definitions = {}; // <-- Add this
 
 // Load data from experienceData.json (async)
 async function loadExperienceData() {
@@ -14,6 +15,7 @@ async function loadExperienceData() {
         offices = data.offices || [];
         majors = data.majors || [];
         departmentAttributes = data.departmentAttributes || {};
+        definitions = data.definitions || {}; // <-- Load definitions
     } catch (e) {
         console.error("Failed to load experience data:", e);
         // Fallback: empty arrays/objects
@@ -21,6 +23,7 @@ async function loadExperienceData() {
         offices = [];
         majors = [];
         departmentAttributes = {};
+        definitions = {};
     }
 }
 
@@ -276,7 +279,7 @@ async function chatbotStart() {
     document.getElementById('chatbot-messages').innerHTML = '';
     showFilterTags();
     hideToolbar();
-    addMessage("Opportunity awaits! What would you like to learn more about?", "bot", () => {
+    addMessage("Opportunity awaits! To begin, let's get to know you a bit.", "bot", () => {
         setOptions([
             { label: "I'm a Student", icon: "user-line", onClick: () => chatbotChooseMode("student") }
             //{ label: "I'm Faculty/Staff", icon: "graduation-cap-line", onClick: () => chatbotChooseMode("faculty") },
@@ -306,7 +309,7 @@ function chatbotChooseMode(mode) {
 
 function chatbotAskMajor() {
     hideToolbar();
-    addMessage("What's your major?", "bot", () => {
+    addMessage("Alright. What's your major?", "bot", () => {
         setOptions(
             majors.map(m => ({
                 label: m,
@@ -340,7 +343,7 @@ const filterTopics = [
     },
     {
         key: "compensation",
-        label: "Do you want paid or unpaid opportunities?",
+        label: "Do you prefer paid or unpaid opportunities?",
         options: [
             { label: "Paid", icon: "money-dollar-circle-line", value: "paid" },
             { label: "Unpaid", icon: "close-circle-line", value: "not paid" }
@@ -348,7 +351,7 @@ const filterTopics = [
     },
     {
         key: "location",
-        label: "Where do you want your experience?",
+        label: "Where would you prefer your experience take place?",
         options: [
             { label: "On Campus", icon: "home-2-line", value: "on-campus" },
             { label: "Off Campus", icon: "road-map-line", value: "off-campus" }
@@ -356,7 +359,7 @@ const filterTopics = [
     },
     {
         key: "timing",
-        label: "When do you want to do this?",
+        label: "When are you available?",
         options: [
             { label: "Academic Year", icon: "calendar-event-line", value: "academic year" },
             { label: "Summer", icon: "sun-line", value: "summer" }
@@ -364,7 +367,7 @@ const filterTopics = [
     },
     {
         key: "credit",
-        label: "Do you want course credit?",
+        label: "Are you interested in potentially earning course credit?",
         options: [
             { label: "Course Credit", icon: "award-line", value: "course credit" }
         ]
@@ -400,17 +403,12 @@ function renderFilterScreen(topic) {
     showToolbar();
     updatePersistentToolbar(topic);
 
-    // Render all buttons once, and update their selected state on click without re-rendering all
     const currentSelectionsForTopic = filterSelections[topic.key] || [];
     topic.options.forEach((opt, idx) => {
         const btn = document.createElement('button');
         btn.className = 'chatbot-option-btn';
-
-        if (currentSelectionsForTopic.includes(opt.value)) {
-            btn.classList.add('selected');
-        }
-
-        // Icon (always left, absolutely positioned)
+        if (currentSelectionsForTopic.includes(opt.value)) btn.classList.add('selected');
+        // Icon (left)
         if (opt.icon) {
             const iconCircle = document.createElement('div');
             iconCircle.className = 'chatbot-btn-icon-circle';
@@ -420,15 +418,38 @@ function renderFilterScreen(topic) {
             iconCircle.appendChild(icon);
             btn.appendChild(iconCircle);
         }
-
-        // Label (centered)
+        // Label (center)
         const labelSpan = document.createElement('span');
         labelSpan.className = 'chatbot-btn-label';
         labelSpan.textContent = opt.label;
         btn.appendChild(labelSpan);
 
+        // Info icon (right, styled by your CSS)
+        const infoBtn = document.createElement('button');
+        infoBtn.type = 'button';
+        infoBtn.className = 'chatbot-info-btn';
+        infoBtn.style.position = 'absolute';
+        infoBtn.style.right = '0.7em';
+        infoBtn.style.top = '50%';
+        infoBtn.style.transform = 'translateY(-50%)';
+        infoBtn.style.background = 'none';
+        infoBtn.style.border = 'none';
+        infoBtn.style.padding = '0';
+        infoBtn.style.margin = '0';
+        infoBtn.style.cursor = 'pointer';
+        infoBtn.style.fontSize = '1.2em';
+        infoBtn.style.color = '#888';
+        infoBtn.setAttribute('tabindex', '0');
+        infoBtn.setAttribute('aria-label', `More info about ${opt.label}`);
+        infoBtn.innerHTML = '<i class="ri-information-line" style = "color: var(--ocean-deep);opacity: 50%;"></i>';
+        infoBtn.onclick = (e) => {
+            e.stopPropagation();
+            showInfoModal(opt.label, definitions[opt.value] || "No additional information available.");
+        };
+        btn.style.position = 'relative';
+        btn.appendChild(infoBtn);
+
         btn.onclick = () => {
-            // Toggle selection for this option only
             let selections = filterSelections[topic.key] || [];
             const isSelected = selections.includes(opt.value);
             if (isSelected) {
@@ -441,7 +462,7 @@ function renderFilterScreen(topic) {
             filterSelections[topic.key] = selections;
             showFilterTags();
             updatePersistentToolbar(topic);
-            scrollMessagesToBottom(); // Ensure messages are always scrolled down after selection
+            scrollMessagesToBottom();
         };
 
         btn.style.animationDelay = (0.08 * idx) + 's';
@@ -635,7 +656,7 @@ function updatePersistentToolbar(topic) {
 
 function chatbotShowResults(filters) {
     hideToolbar();
-    chatbotState.filters = filters; // Ensure this is up-to-date
+    chatbotState.filters = filters;
     showFilterTags();
 
     // --- Clear all previous messages before showing results ---
@@ -644,7 +665,16 @@ function chatbotShowResults(filters) {
         msgArea.innerHTML = '';
     }
 
-    let results = experiences;
+    // Canonical result terms for matching
+    const canonicalTerms = [
+        "academic internship",
+        "paid internship",
+        "research",
+        "fellowship",
+        "service learning",
+        "clinical placement",
+        "practicum"
+    ];
 
     // Gather all user tags (major + filters)
     let userTags = [];
@@ -656,38 +686,31 @@ function chatbotShowResults(filters) {
     }
     userTags = userTags.concat(filters.map(f => f.toLowerCase()));
 
-    // --- Compute match score for each experience ---
+    // --- Compute match score for each experience, prioritize canonical terms ---
     function matchScore(exp) {
-        // Count how many userTags are present in exp.tags (case-insensitive)
         let expTags = (exp.tags || []).map(t => t.toLowerCase());
-        return userTags.reduce((score, tag) => expTags.includes(tag) ? score + 1 : score, 0);
+        let score = userTags.reduce((score, tag) => expTags.includes(tag) ? score + 1 : score, 0);
+        // Boost score if experience is a canonical term and matches a filter
+        if (canonicalTerms.includes(exp.name.toLowerCase())) {
+            score += 2;
+        }
+        return score;
     }
 
     // Attach score to each experience
-    let scoredResults = results.map(exp => ({ ...exp, _score: matchScore(exp) }));
+    let scoredResults = experiences.map(exp => ({ ...exp, _score: matchScore(exp) }));
+
+    // Only show canonical result terms (filter out non-canonical if any)
+    scoredResults = scoredResults.filter(exp => canonicalTerms.includes(exp.name.toLowerCase()));
 
     // Find the highest score
     let maxScore = 0;
     scoredResults.forEach(exp => { if (exp._score > maxScore) maxScore = exp._score; });
 
+    // Only include results with the highest score (and at least 1 match)
     let finalResults = [];
-    let usedIds = new Set();
-
-    // Helper to add results for a given score, up to a limit if provided
-    function addResultsForScore(score, limit) {
-        let group = scoredResults.filter(exp => exp._score === score && !usedIds.has(exp.name));
-        if (limit !== undefined) group = group.slice(0, limit);
-        group.forEach(exp => usedIds.add(exp.name));
-        finalResults = finalResults.concat(group);
-    }
-
-    // Add all with maxScore, then maxScore-1, ... down to 2
-    for (let score = maxScore; score >= 2; score--) {
-        if (score === 2) {
-            addResultsForScore(score, 3); // Only up to 3 for 2-matches
-        } else {
-            addResultsForScore(score);
-        }
+    if (maxScore > 0) {
+        finalResults = scoredResults.filter(exp => exp._score === maxScore);
     }
 
     // If nothing matched at all, fallback to previous relaxation logic
@@ -698,7 +721,7 @@ function chatbotShowResults(filters) {
         let removed = [];
         while (relaxedResults.length === 0 && relaxedFilters.length > 0) {
             removed.unshift(relaxedFilters.pop());
-            relaxedResults = experiences;
+            relaxedResults = experiences.filter(exp => canonicalTerms.includes(exp.name.toLowerCase()));
             if (chatbotState.major && departmentAttributes[chatbotState.major]) {
                 relaxedResults = relaxedResults.filter(exp =>
                     departmentAttributes[chatbotState.major].some(tag =>
@@ -715,19 +738,22 @@ function chatbotShowResults(filters) {
             }
         }
         if (relaxedResults.length > 0) {
+            // Only show the highest score matches from relaxed results
             relaxedResults = relaxedResults
-                .map(exp => ({ ...exp, _score: matchScore(exp) }))
-                .sort((a, b) => b._score - a._score);
+                .map(exp => ({ ...exp, _score: matchScore(exp) }));
+            let relaxedMax = 0;
+            relaxedResults.forEach(exp => { if (exp._score > relaxedMax) relaxedMax = exp._score; });
+            relaxedResults = relaxedResults.filter(exp => exp._score === relaxedMax && relaxedMax > 0);
+            relaxedResults.sort((a, b) => b._score - a._score || a.name.localeCompare(b.name));
             addMessage(
-                "We weren't able to find any experiences that matched all your filters, so we relaxed them a bit. " +
-                " Here are some options that might interest you, based on your major and remaining filters.",
+                "Hmm. We weren't able to find an experience that matched all your filters, so we relaxed them a bit. Here are some options that might interest you, based on your major and/or remaining filters.",
                 "bot",
                 () => {
                     showExperienceResultsList(relaxedResults, 0);
                 }
             );
         } else {
-            addMessage("No matches found, sorry. Try different filters.", "bot", () => {
+            addMessage("No matches found, sorry. Try different filters?", "bot", () => {
                 setOptions([
                     { label: "Try Different Filters", icon: "filter-line", onClick: () => {
                         filterTopicIndex = 0;
@@ -747,54 +773,79 @@ function chatbotShowResults(filters) {
 }
 
 function showExperienceResultsList(list, startIdx) {
-    const endIdx = Math.min(startIdx + 4, list.length); // Show up to 4 at a time
-    const names = [];
-    for (let i = startIdx; i < endIdx; i++) {
-        // Display names in lowercase, but keep HTML bold
-        names.push(`<b>${list[i].name.toLowerCase()}</b>`);
-    }
-
-    if (names.length) {
-        let message = "";
-
-        if (names.length === 1) {
-            const plain = list[startIdx].name.trim().toLowerCase();
-            const firstLetter = plain.charAt(0);
-            const article = ['a', 'e', 'i', 'o', 'u'].includes(firstLetter) ? 'an' : 'a';
-            message = `Based on your interests, you might be interested in ${article} ${names[0]}.`;
-        } else if (names.length === 2) {
-            message = `Based on your interests, you might be interested in ${names[0]} or ${names[1]}.`;
-        } else {
-            const allButLast = names.slice(0, -1).join(", ");
-            const last = names[names.length - 1];
-            message = `Based on your interests, you might be interested in ${allButLast}, or ${last}.`;
-        }
-
-        addMessage(message, "bot");
-    }
-
-    if (endIdx < list.length) {
-        setOptions([
-            {
-                label: "Show More",
-                icon: "arrow-down-line",
-                onClick: () => {
-                    setOptions([]);
-                    showExperienceResultsList(list, endIdx);
-                }
-            }
-        ]);
-    } else {
+    // Only show the "Based on your interests..." message ONCE, then show all results as a single message.
+    if (!list || list.length === 0) {
         chatbotShowOffices();
+        return;
     }
+
+    // Build clickable names for all results
+    const names = list.map(exp =>
+        `<span class="chatbot-def-term" data-exp-name="${encodeURIComponent(exp.name)}"><b>${exp.name.toLowerCase()}</b></span>`
+    );
+
+    let message = "";
+
+    function pluralizeBolded(nameHtml, suffix = "s") {
+        return nameHtml.replace(/(<b>)(.*?)(<\/b>)/i, (_, open, inner, close) => `${open}${inner}${suffix}${close}`);
+    }
+
+    if (names.length === 1) {
+        message = `Based on your responses, you might be interested in ${pluralizeBolded(names[0], "s.")}`;
+    } else if (names.length === 2) {
+        message = `Based on your responses, you might be interested in ${pluralizeBolded(names[0], "s,")} or ${pluralizeBolded(names[1], "s.")}`;
+    } else {
+        const pluralNames = names.map((n, idx) => {
+            if (idx < names.length - 2) {
+                return pluralizeBolded(n, "s,");
+            } else if (idx === names.length - 2) {
+                return pluralizeBolded(n, "s,");
+            } else {
+                return pluralizeBolded(n, "s.");
+            }
+        });
+        const allButLast = pluralNames.slice(0, -1).join(" ");
+        const last = pluralNames[pluralNames.length - 1];
+        message = `Based on your responses, you might be interested in ${allButLast} or ${last}`;
+    }
+
+    addMessage(message, "bot", () => {
+        const msgArea = document.getElementById('chatbot-messages');
+        if (!msgArea) return;
+        const terms = msgArea.querySelectorAll('.chatbot-def-term');
+        terms.forEach(term => {
+            term.style.cursor = "pointer";
+            term.title = "Tap to see definition";
+            term.onclick = function(e) {
+                const expName = decodeURIComponent(term.getAttribute('data-exp-name'));
+                const exp = experiences.find(x => x.name.toLowerCase() === expName.toLowerCase());
+                if (exp) {
+                    showInfoModal(exp.name, exp.description || "No additional information available.");
+                }
+            };
+        });
+        chatbotShowOffices();
+    });
 }
 
 
 // Modular function to show office results as cards with matched tags
 function showOfficesResultsList(list, startIdx, userTags) {
-    const endIdx = Math.min(startIdx + 2, list.length);
+    // Sort offices by number of matched tags (descending)
+    const sortedList = [...list].sort((a, b) => {
+        const aMatches = (a.tags || []).filter(tag =>
+            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
+        ).length;
+        const bMatches = (b.tags || []).filter(tag =>
+            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
+        ).length;
+        // Descending order: most matches first
+        return bMatches - aMatches;
+    });
+
+    const endIdx = Math.min(startIdx + 2, sortedList.length);
     for (let i = startIdx; i < endIdx; i++) {
-        const office = list[i];
+        const office = sortedList[i];
         // Find matching tags (case-insensitive)
         const matchedTags = (office.tags || []).filter(tag =>
             userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
@@ -806,7 +857,7 @@ function showOfficesResultsList(list, startIdx, userTags) {
                     <h2 class="chatbot-office-title">${office.name}</h2>
                     <hr>
                     <p>${summarizeInfo(office.description || office.info)}</p>
-                    ${office.link ? `<button class="chatbot-option-btn" onclick="window.open('${office.link}', '_blank')">Learn more</button>` : ""}
+                    ${office.link ? `<button class="chatbot-option-btn" onclick="window.open('${office.link}', '_blank')">Learn more <i class="ri-external-link-fill" style = "position: absolute;right: 1rem;font-size:1.2rem;"></i></button>` : ""}
                     ${matchedTags.length > 0 ? `
                         <div class="chatbot-office-tags">
                             ${matchedTags.map(tag => `<span class="chatbot-office-tag">${tag}</span>`).join('')}
@@ -817,14 +868,14 @@ function showOfficesResultsList(list, startIdx, userTags) {
         `;
         addMessage(msg, "bot");
     }
-    if (endIdx < list.length) {
+    if (endIdx < sortedList.length) {
         setOptions([
             {
                 label: "Show More",
                 icon: "arrow-down-line",
                 onClick: () => {
                     setOptions([]);
-                    showOfficesResultsList(list, endIdx, userTags);
+                    showOfficesResultsList(sortedList, endIdx, userTags);
                 }
             }
         ]);
@@ -842,7 +893,7 @@ function showOfficesResultsList(list, startIdx, userTags) {
 // Update chatbotShowOffices to use the new card layout and tags
 function chatbotShowOffices() {
     hideToolbar();
-    addMessage("Additionally, here are some campus resources you may find helpful.", "bot", () => {
+    addMessage("Here are some campus resources you may find helpful.", "bot", () => {
         // Collect user tags from major and filters
         let userTags = [];
         if (chatbotState.major) userTags.push(chatbotState.major);
@@ -913,3 +964,41 @@ window.onload = function() {
     }
     chatbotStart();
 };
+
+// Minimal modal logic
+function showInfoModal(title, body) {
+    let modal = document.getElementById('chatbot-info-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'chatbot-info-modal';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100vw';
+        modal.style.height = '100vh';
+        modal.style.background = 'rgba(0,0,0,0.35)';
+        modal.style.display = 'flex';
+        modal.style.justifyContent = 'center';
+        modal.style.alignItems = 'center';
+        modal.style.zIndex = '9999';
+        modal.innerHTML = `
+            <div>
+                <button type="button" class="chatbot-info-modal-close" aria-label="Close" style="position:absolute;top:1em;right:1em;background:none;border:none;color:var(--ocean-main);font-size:1.7em;cursor:pointer;padding:0.1em 0.2em;z-index:2;border-radius:50%;transition:background 0.2s;width:2em;height:2em;display:flex;align-items:center;justify-content:center;">
+                    <i class="ri-close-line"></i>
+                </button>
+                <div id="chatbot-info-modal-title" style="font-weight:600;font-size:1.15em;margin-bottom:-0.25em;"></div>
+                <hr style="margin:1em 0;">
+                <div id="chatbot-info-modal-body"></div>
+                <button onclick="document.getElementById('chatbot-info-modal').style.display='none';" >Okay</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        // Add close logic for the close button
+        modal.querySelector('.chatbot-info-modal-close').onclick = () => { modal.style.display = 'none'; };
+        // Click outside modal closes it
+        modal.onclick = e => { if (e.target === modal) modal.style.display = 'none'; };
+    }
+    modal.querySelector('#chatbot-info-modal-title').textContent = title;
+    modal.querySelector('#chatbot-info-modal-body').textContent = body;
+    modal.style.display = 'flex';
+}

@@ -5,65 +5,58 @@
             "image": "",
             "description": "Internships connected to a course; students get projects with faculty help and receive course credit. Typically not paid. The Center for Community Based Learning facilitates academic internships.",
             "link": "https://ccbl.humboldt.edu/academic-internships",
-            "tags": ["course credit", "faculty help", "not always paid", "reflection", "off-campus", "academic", "internship"]
+            "tags": ["academic internship", "course credit", "faculty help", "not paid", "reflection", "off-campus", "academic", "internship", "ccbl"]
+        },
+        {
+            "name": "Paid Internship",
+            "image": "",
+            "description": "Internships offered by companies during the academic year or summer. Students are hired directly by the company. Opportunities are typically advertised by the Career Development Center, Library, and some departments.",
+            "link": "https://cdc.humboldt.edu/academic-year-internships",
+            "tags": ["paid internship", "paid", "company", "academic year", "summer", "off-campus", "career", "internship", "cdc", "library"]
+        },
+        {
+            "name": "Research",
+            "image": "",
+            "description": "Opportunities with faculty, research labs, or agencies to generate new knowledge. Usually paid, especially off-campus. Advertised via Sponsored Programs Foundation, departments, or faculty.",
+            "link": "https://research.humboldt.edu/internships",
+            "tags": ["research", "faculty", "paid", "off-campus", "summer", "academic year", "spf", "research internship"]
+        },
+        {
+            "name": "Fellowship",
+            "image": "",
+            "description": "Opportunities offered by faculty members at Cal Poly Humboldt, or other universities, centers and institutes to engage in scholarly and creative activities. Experience is usually paid. Advertised through the Sponsored Programs Foundation, departments, or faculty.",
+            "link": "https://humboldt-eh.infoready4.com/",
+            "tags": ["fellowship", "research", "paid", "off-campus", "spf"]
         },
         {
             "name": "Service Learning",
             "image": "",
-            "description": "Academic internship focused on providing a service to an external organization. Facilitated by the Center for Community Based Learning.",
+            "description": "A particular type of academic internship course whose focus is to provide a service to an organization external to campus. The Center for Community Based Learning facilitates service learning courses.",
             "link": "https://ccbl.humboldt.edu/service-learning",
-            "tags": ["service", "course credit", "reflection", "off-campus", "community", "maybe paid"]
+            "tags": ["service learning", "service", "course credit", "reflection", "off-campus", "community", "ccbl"]
         },
         {
             "name": "Clinical Placement",
             "image": "",
-            "description": "Internship in a clinical setting for professional experience. Common for social work majors. Facilitated by the Center for Community Based Learning.",
+            "description": "A particular type of academic internship course in which students are placed in a clinical setting to gain professional experience. Common for social work majors. The Center for Community Based Learning facilitates clinical placements.",
             "link": "https://ccbl.humboldt.edu/clinical-placements",
-            "tags": ["clinical", "professional", "course credit", "required", "reflection", "off-campus"]
+            "tags": ["clinical placement", "clinical", "professional", "course credit", "required", "reflection", "off-campus", "ccbl"]
         },
         {
             "name": "Practicum",
             "image": "",
-            "description": "Internship in a professional setting for experience. Common for psychology majors. Facilitated by the Center for Community Based Learning.",
+            "description": "A particular type of academic internship course in which students are placed in a professional setting to gain experience. Common for psychology majors. The Center for Community Based Learning facilitates practica.",
             "link": "https://ccbl.humboldt.edu/practicums",
-            "tags": ["practicum", "professional", "course credit", "required", "reflection", "off-campus"]
-        },
-        {
-            "name": "Research Internship",
-            "image": "",
-            "description": "Opportunities with faculty, research labs, or agencies to generate new knowledge. Usually paid, especially off-campus. Advertised via Sponsored Programs Foundation, departments, or faculty.",
-            "link": "https://research.humboldt.edu/internships",
-            "tags": ["research", "faculty", "paid", "off-campus", "summer", "academic year"]
-        },
-        {
-            "name": "Paid Academic Year Internship",
-            "image": "",
-            "description": "Internships offered by companies during the academic year. Students are hired directly. Advertised by the Career Development Center and departments.",
-            "link": "https://cdc.humboldt.edu/academic-year-internships",
-            "tags": ["paid", "company", "academic year", "off-campus", "career", "internship"]
-        },
-        {
-            "name": "Paid Summer Internship",
-            "image": "",
-            "description": "Internships offered by companies during the summer. Students are hired directly. Advertised by the Career Development Center and departments.",
-            "link": "https://cdc.humboldt.edu/summer-internships",
-            "tags": ["paid", "company", "summer", "off-campus", "career", "internship"]
-        },
-        {
-            "name": "Job Shadowing",
-            "image": "",
-            "description": "Observe professionals in their work environment to learn about careers. Not paid. May be arranged through departments or Career Center.",
-            "link": "https://career.humboldt.edu/job-shadowing",
-            "tags": ["shadowing", "not paid", "career", "off-campus", "exploration"]
+            "tags": ["practicum", "professional", "course credit", "required", "reflection", "off-campus", "ccbl"]
         }
     ],
 
     "offices": [
         {
             "name": "Career Development Center",
-            "description": "The Career Development Center advertises paid opportunities such as jobs, paid internships, and fellowships through Handshake. They host campus events like the Career Fair and Part-time Job & Volunteer Fair, and offer career advising, resume writing, and job application support to students. Handshake is available for faculty, staff, and external partners to post opportunities.",
-            "link": "https://cdc.humboldt.edu/",
-            "image": "placeholder.png",
+            "description": "The Career Development Center advertises paid opportunities such as <b>jobs,</b> <b>paid internships,</b> and <b>fellowships</b> through Handshake. They host campus events like the Career Fair and Part-time Job & Volunteer Fair, and offer career advising, resume writing, and job application support to students. Handshake is available for faculty, staff, and external partners to post opportunities.",
+            "link": "https://www.humboldt.edu/career-development",
+            "image": "images/career_development_center.png",
             "tags": [
                 "paid",
                 "career",
@@ -75,14 +68,16 @@
                 "advising",
                 "internship",
                 "fellowship",
-                "event"
+                "event",
+                "job",
+                "academic year"
             ]
         },
         {
             "name": "Center for Community Based Learning (CCBL)",
-            "description": "The Center for Community Based Learning (CCBL) supports and promotes course-based, hands-on learning practices such as internships, practicums, and service learning courses. CCBL assists faculty with course design and community connections, students with community engagement and S4 reporting, and community partners with site approval and opportunity development.",
-            "link": "https://ccbl.humboldt.edu/",
-            "image": "placeholder.png",
+            "description": "The Center for Community Based Learning (CCBL) supports and promotes course-based, hands-on learning practices such as <b>internships,</b> <b>practicums,</b> and <b>service learning</b> courses. CCBL assists faculty with course design and community connections, students with community engagement and S4 reporting, and community partners with site approval and opportunity development.",
+            "link": "https://www.humboldt.edu/ccbl",
+            "image": "images/ccbl.jpg",
             "tags": [
                 "internship",
                 "service learning",
@@ -92,14 +87,15 @@
                 "S4 reporting",
                 "faculty support",
                 "student support",
-                "community partner"
+                "community partner",
+                "academic year"
             ]
         },
         {
             "name": "Youth Educational Services (YES)",
-            "description": "Youth Educational Services (Y.E.S.) offers a variety of community-based volunteer opportunities, from large-scale events to semester-long programs. Students can participate in one-day service events, weekly drop-in activities, or semester-long cohorts. Leadership positions and internal scholarships are available for program directors. Some programs are affiliated with a 1-unit course.",
-            "link": "https://humboldt.edu/yes",
-            "image": "placeholder.png",
+            "description": "Youth Educational Services (Y.E.S.) offers a variety of community-based <b>volunteer opportunities,</b> from large-scale events to semester-long programs. Students can participate in one-day service events, weekly drop-in activities, or semester-long cohorts. Leadership positions and internal scholarships are available for program directors. Some programs are affiliated with a 1-unit course.",
+            "link": "https://www.humboldt.edu/youth-educational-services",
+            "image": "images/yes.jpg",
             "tags": [
                 "volunteer",
                 "leadership",
@@ -109,14 +105,16 @@
                 "cohort",
                 "scholarship",
                 "student-led",
-                "course credit"
+                "course credit",
+                "academic year",
+                "summer"
             ]
         },
         {
             "name": "College Corps",
             "description": "College Corps is a service fellowship that provides students with $10,000 in college funding for completing 450 hours of service in education, climate action, or food insecurity. Hours may also count toward service or internship requirements for other courses. College Corps prepares students for their future careers through community service.",
-            "link": "https://humboldt.edu/college-corps",
-            "image": "placeholder.png",
+            "link": "https://www.humboldt.edu/ccbl/college-corps",
+            "image": "images/cc.jpeg",
             "tags": [
                 "service",
                 "fellowship",
@@ -126,14 +124,15 @@
                 "food insecurity",
                 "community",
                 "career preparation",
-                "internship credit"
+                "internship credit",
+                "academic year"
             ]
         },
         {
             "name": "SPF Engagement Hub",
-            "description": "The SPF Engagement Hub is a website that showcases externally funded opportunities for students and faculty, including fellowships, research opportunities, and paid internships. All opportunities are tied to existing grants and contracts and change dynamically.",
-            "link": "https://humboldt.edu/spf-engagement-hub",
-            "image": "placeholder.png",
+            "description": "The SPF Engagement Hub is a website that showcases externally funded opportunities for students and faculty, including <b>fellowships,</b> <b>research opportunities,</b> and <b>paid internships.</b> All opportunities are tied to existing grants and contracts and change dynamically.",
+            "link": "https://humboldt-eh.infoready4.com/",
+            "image": "images/spf.jpg",
             "tags": [
                 "fellowship",
                 "research",
@@ -146,16 +145,18 @@
         },
         {
             "name": "Library",
-            "description": "The Cal Poly Humboldt Library offers several paid, on-campus internship opportunities for students, available year-round. These internships involve research and scholarship, in addition to the Library's core services for the campus community.",
-            "link": "https://library.humboldt.edu/",
-            "image": "placeholder.png",
+            "description": "The Cal Poly Humboldt Library offers several paid, on-campus internship opportunities for students, available year-round. These internships involve <b>research</b> and <b>scholarships,</b> in addition to the Library's core services for the campus community.",
+            "link": "https://library.humboldt.edu/library-scholar-internships",
+            "image": "images/lib.jpg",
             "tags": [
                 "paid",
                 "research",
                 "on-campus",
                 "internship",
                 "scholarship",
-                "year-round"
+                "year-round",
+                "academic year",
+                "summer"
             ]
         }
     ],
@@ -180,5 +181,19 @@
         "Engineering": ["paid", "internship", "career-relevant skills"],
         "Art": ["internship", "faculty help"],
         "Other": []
+    },
+    
+    "definitions": {
+        "internship": "Internships are structured work experiences related to your field of study or career interests.",
+        "research": "Research experiences involve working with faculty or labs to generate new knowledge.",
+        "service learning": "Service learning combines coursework with meaningful community service.",
+        "shadowing": "Job shadowing lets you observe professionals in their work environment.",
+        "paid": "Paid opportunities provide financial compensation for your work.",
+        "not paid": "Unpaid opportunities do not offer financial compensation.",
+        "on-campus": "On-campus experiences take place at Cal Poly Humboldt.",
+        "off-campus": "Off-campus experiences occur at external organizations or sites.",
+        "academic year": "Academic year opportunities take place during the fall and spring semesters.",
+        "summer": "Summer opportunities occur during the summer break.",
+        "course credit": "These experiences can be counted toward your degree as academic credit."
     }
 }
