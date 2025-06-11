@@ -79,6 +79,9 @@
     drawer.addEventListener('click', e => {
         if (drawer.classList.contains('closed') && e.target === handle) setDrawer(true);
     });
+
+    window.scrollTo(0, 0); // Scroll to top on load
+
 </script>
 </body>
 </html>
