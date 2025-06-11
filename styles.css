@@ -188,12 +188,14 @@ body {
     background: var(--glass-tint-ocean);
     color: var(--ocean-deep);
     border-radius: 20px 20px 20px 0px;
+    font-weight: 500!important;
 }
 
 .chatbot-bubble.user {
     background: var(--glass-tint-amber);
     color: var(--amber-warm);
     border-radius: 20px 20px 0px 20px;
+    font-weight: 500!important;
 }
 
 #chatbot-options {
@@ -394,12 +396,12 @@ body {
 #chatbot-filter-tags {
     width: 100%;
     box-sizing: border-box;
-    padding: 0.5rem 1.5rem 0.5rem 1.5rem;
+    padding: 0px 0.75rem;
     background: var(--glass-surface);
     backdrop-filter: var(--glass-blur-subtle);
     display: flex;
     flex-wrap: nowrap;
-    gap: 0.5rem;
+    gap: 0.125rem;
     justify-content: flex-start;
     align-items: center;
     z-index: 12;
@@ -453,16 +455,16 @@ body {
     justify-content: space-between;
     align-items: center;
     gap: 0.5rem;
-    background: var(--glass-surface-strong);
+    background: transparent;
     backdrop-filter: var(--glass-blur-strong);
     border-radius: 20px 20px 0 0;
-    padding: 1rem 1.5rem;
+    padding: 0px 0.5rem;
     min-height: auto;
     position: relative;
     z-index: 20;
     font-size: 0.9rem;
     max-width: 800px;
-    margin: 0 auto 0.5rem auto;
+    margin: 0 auto 0rem auto;
     box-sizing: border-box;
     width: 100%;
     border-bottom: var(--glass-border);
@@ -489,9 +491,9 @@ body {
 }
 
 #chatbot-toolbar .chatbot-option-btn {
-    font-size: 0.9rem !important;
-    padding: 0.5rem 1rem !important;
-    border-radius: 16px !important;
+    font-size: 0.95rem !important;
+    padding: 0.5rem 1.5rem;
+    border-radius: 100vmin !important;
     height: auto;
     min-height: 2.5rem;
     min-width: 0 !important;
