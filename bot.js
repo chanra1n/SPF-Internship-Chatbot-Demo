@@ -139,6 +139,96 @@ function scrollOptionsToTop() {
     scrollMessagesToBottom();
 }
 
+// --- Message queue with delay between bubbles ---
+let messageQueue = [];
+let isMessageProcessing = false;
+const MESSAGE_DELAY = 750; // ms between bubbles
+
+function queueMessage(text, sender = "bot", cb) {
+    messageQueue.push({ text, sender, cb });
+    processMessageQueue();
+}
+
+function processMessageQueue() {
+    if (isMessageProcessing || messageQueue.length === 0) return;
+    isMessageProcessing = true;
+    const { text, sender, cb } = messageQueue.shift();
+    addMessageImmediate(text, sender, () => {
+        if (cb) cb();
+        setTimeout(() => {
+            isMessageProcessing = false;
+            processMessageQueue();
+        }, MESSAGE_DELAY);
+    });
+}
+
+// --- Replace ALL addMessage calls for user/bot bubbles with queueMessage everywhere except inside queue/processing logic ---
+
+// --- Utility: send a sequence of user messages, then a bot message, all with delays ---
+function queueUserAndBotMessages(userMsgs, botMsg, afterBot) {
+    // userMsgs: array of strings (user messages)
+    // botMsg: string (bot message)
+    // afterBot: callback after bot message
+    let idx = 0;
+    function sendNextUser() {
+        if (idx < userMsgs.length) {
+            queueMessage(userMsgs[idx], "user", () => {
+                idx++;
+                sendNextUser();
+            });
+        } else {
+            if (botMsg) {
+                queueMessage(botMsg, "bot", afterBot);
+            } else if (afterBot) {
+                afterBot();
+            }
+        }
+    }
+    sendNextUser();
+}
+
+// --- Rename the original addMessage to addMessageImmediate ---
+function addMessageImmediate(text, sender = "bot", cb) {
+    const msgArea = document.getElementById('chatbot-messages');
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'chatbot-msg ' + sender;
+    const bubble = document.createElement('div');
+    bubble.className = 'chatbot-bubble ' + sender;
+    msgDiv.appendChild(bubble);
+    msgArea.appendChild(msgDiv);
+
+    // Always scroll to bottom after any change
+    setTimeout(scrollMessagesToBottom, 0);
+
+    if (sender === "bot") {
+        // If the text contains HTML tags, use innerHTML for the final output
+        let isHtml = /<\/?[a-z][\s\S]*>/i.test(text);
+        let i = 0;
+        function typeChar() {
+            if (i <= text.length) {
+                if (isHtml) {
+                    // Show all at once if HTML (no typing animation)
+                    bubble.innerHTML = text;
+                    if (cb) cb();
+                } else {
+                    bubble.textContent = text.slice(0, i);
+                    scrollMessagesToBottom();
+                    i++;
+                    setTimeout(typeChar, text.length > 60 ? 8 : 18);
+                }
+            } else if (cb) {
+                cb();
+            }
+        }
+        typeChar();
+    } else {
+        bubble.textContent = text;
+        if (cb) cb();
+    }
+    // Scroll to bottom again after animation
+    setTimeout(scrollMessagesToBottom, 100);
+}
+
 // Typing animation for bot messages
 function addMessage(text, sender = "bot", cb) {
     const msgArea = document.getElementById('chatbot-messages');
@@ -279,7 +369,7 @@ async function chatbotStart() {
     document.getElementById('chatbot-messages').innerHTML = '';
     showFilterTags();
     hideToolbar();
-    addMessage("Opportunity awaits! To begin, let's get to know you a bit.", "bot", () => {
+    queueMessage("Opportunity awaits! To begin, let's get to know you a bit.", "bot", () => {
         setOptions([
             { label: "I'm a Student", icon: "user-line", onClick: () => chatbotChooseMode("student") }
             //{ label: "I'm Faculty/Staff", icon: "graduation-cap-line", onClick: () => chatbotChooseMode("faculty") },
@@ -290,7 +380,7 @@ async function chatbotStart() {
 
 function chatbotChooseMode(mode) {
     chatbotState.mode = mode;
-    addMessage(
+    queueMessage(
         mode === "student"
             ? "Student"
             : mode === "faculty"
@@ -299,7 +389,7 @@ function chatbotChooseMode(mode) {
         "user"
     );
     if (mode !== "student") {
-        addMessage("Student mode is the main focus for this demo. Please select 'I'm a Student' to continue.", "bot", () => {
+        queueMessage("Student mode is the main focus for this demo. Please select 'I'm a Student' to continue.", "bot", () => {
             setOptions([{ label: "Back", icon: "arrow-left-line", onClick: chatbotStart }]);
         });
         return;
@@ -309,7 +399,7 @@ function chatbotChooseMode(mode) {
 
 function chatbotAskMajor() {
     hideToolbar();
-    addMessage("Alright. What's your major?", "bot", () => {
+    queueMessage("Alright. What's your major?", "bot", () => {
         setOptions(
             majors.map(m => ({
                 label: m,
@@ -321,12 +411,13 @@ function chatbotAskMajor() {
 
 function chatbotSetMajor(major) {
     chatbotState.major = major;
-    addMessage(major, "user");
-    filterTopicIndex = 0;
-    filterSelections = {}; // Clear this
-    chatbotState.filters = []; // Clear this too
-    showFilterTags(); // This will show major and empty filters
-    chatbotAskFilterTopic();
+    queueMessage(major, "user", () => {
+        filterTopicIndex = 0;
+        filterSelections = {};
+        chatbotState.filters = [];
+        showFilterTags();
+        chatbotAskFilterTopic();
+    });
 }
 
 // Define filter topics (grouped logically) for multi-step selection
@@ -391,7 +482,7 @@ function chatbotAskFilterTopic() {
     
     const topic = filterTopics[filterTopicIndex];
     
-    addMessage(topic.label, "bot", () => {
+    queueMessage(topic.label, "bot", () => {
         renderFilterScreen(topic);
     });
 }
@@ -552,7 +643,6 @@ function updatePersistentToolbar(topic) {
     btnBack.onclick = () => {
         showLoadingOverlay();
         setTimeout(() => {
-            // ...existing code for back...
             const msgArea = document.getElementById('chatbot-messages');
             if (msgArea) {
                 filterTopicIndex--;
@@ -569,7 +659,8 @@ function updatePersistentToolbar(topic) {
                     msgArea.lastElementChild.querySelector('.chatbot-bubble')?.textContent === prevTopic.label) {
                     msgArea.removeChild(msgArea.lastElementChild);
                 }
-                addMessage(prevTopic.label, "bot", () => {
+                // Always delay between user and bot bubbles
+                queueMessage(prevTopic.label, "bot", () => {
                     renderFilterScreen(prevTopic);
                     hideLoadingOverlay();
                 });
@@ -584,24 +675,26 @@ function updatePersistentToolbar(topic) {
         setTimeout(() => {
             const topic = filterTopics[filterTopicIndex];
             const selections = filterSelections[topic.key] || [];
-            if (selections.length > 0) {
-                selections.forEach(sel => {
-                    const opt = topic.options.find(o => o.value === sel);
-                    addMessage(opt ? opt.label : sel, "user");
-                });
-            }
-            filterTopicIndex++;
-            addMessage(filterTopics[filterTopicIndex]?.label, "bot", () => {
-                renderFilterScreen(filterTopics[filterTopicIndex]);
-                hideLoadingOverlay();
+            const userMsgs = selections.map(sel => {
+                const opt = topic.options.find(o => o.value === sel);
+                return opt ? opt.label : sel;
             });
+            const nextBotLabel = filterTopics[filterTopicIndex + 1]?.label;
+            queueUserAndBotMessages(
+                userMsgs,
+                nextBotLabel,
+                () => {
+                    filterTopicIndex++;
+                    renderFilterScreen(filterTopics[filterTopicIndex]);
+                    hideLoadingOverlay();
+                }
+            );
         }, 500);
     };
 
     // --- Update next/skip label live when selections change ---
     const optArea = document.getElementById('chatbot-options');
     if (optArea && btnNext) {
-        // Remove any previous event listener to avoid stacking
         if (btnNext._labelUpdater) {
             optArea.removeEventListener('click', btnNext._labelUpdater);
         }
@@ -610,23 +703,25 @@ function updatePersistentToolbar(topic) {
                 const selections = filterSelections[topic.key] || [];
                 btnNext.innerHTML = '';
                 btnNext.appendChild(makeBtnContent(selections.length === 0 ? 'Skip' : 'Next', 'arrow-right-line', true));
-                // Re-attach the click handler after updating innerHTML
                 btnNext.onclick = () => {
                     showLoadingOverlay();
                     setTimeout(() => {
                         const topic = filterTopics[filterTopicIndex];
                         const selections = filterSelections[topic.key] || [];
-                        if (selections.length > 0) {
-                            selections.forEach(sel => {
-                                const opt = topic.options.find(o => o.value === sel);
-                                addMessage(opt ? opt.label : sel, "user");
-                            });
-                        }
-                        filterTopicIndex++;
-                        addMessage(filterTopics[filterTopicIndex]?.label, "bot", () => {
-                            renderFilterScreen(filterTopics[filterTopicIndex]);
-                            hideLoadingOverlay();
+                        const userMsgs = selections.map(sel => {
+                            const opt = topic.options.find(o => o.value === sel);
+                            return opt ? opt.label : sel;
                         });
+                        const nextBotLabel = filterTopics[filterTopicIndex + 1]?.label;
+                        queueUserAndBotMessages(
+                            userMsgs,
+                            nextBotLabel,
+                            () => {
+                                filterTopicIndex++;
+                                renderFilterScreen(filterTopics[filterTopicIndex]);
+                                hideLoadingOverlay();
+                            }
+                        );
                     }, 500);
                 };
             }, 10);
