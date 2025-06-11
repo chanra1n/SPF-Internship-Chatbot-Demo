@@ -889,9 +889,8 @@ function showOfficesResultsList(list, startIdx, userTags) {
     } else {
         setOptions([
             { label: "Search Again", icon: "search-line", onClick: () => {
-                filterTopicIndex = 0;
-                filterSelections = {};
-                chatbotAskFilterTopic();
+                // Properly reset and restart the chatbot flow.
+                chatbotStart();
             }},
             { label: "Internship Hub", icon: "external-link-line", onClick: () => {
                 window.open("https://humboldt.edu/internships", "_blank");
