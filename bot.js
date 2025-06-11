@@ -831,7 +831,7 @@ function showOfficesResultsList(list, startIdx, userTags) {
 // Update chatbotShowOffices to use the new card layout and tags
 function chatbotShowOffices() {
     hideToolbar();
-    addMessage("Campus offices that can help:", "bot", () => {
+    addMessage("Here are some campus resources you may find helpful.", "bot", () => {
         // Collect user tags from major and filters
         let userTags = [];
         if (chatbotState.major) userTags.push(chatbotState.major);
