@@ -112,11 +112,11 @@
         // Utility functions to show/hide toolbar
         function showToolbar() {
             const toolbar = document.getElementById('chatbot-toolbar');
-            if (toolbar) toolbar.hidden = false;
+            if (toolbar) toolbar.classList.add('show');
         }
         function hideToolbar() {
             const toolbar = document.getElementById('chatbot-toolbar');
-            if (toolbar) toolbar.hidden = true;
+            if (toolbar) toolbar.classList.remove('show');
         }
 
         // Helper to show filter tags. Assumes #chatbot-filter-tags exists after #chatbot-toolbar.
@@ -462,62 +462,54 @@
         showToolbar();
         updatePersistentToolbar(topic);
 
-        // Helper to render all buttons with correct selected state
-        function renderButtons() {
-            optArea.innerHTML = '';
-            topic.options.forEach((opt, idx) => {
-                const btn = document.createElement('button');
-                btn.className = 'chatbot-option-btn';
+        // Render all buttons once, and update their selected state on click without re-rendering all
+        const currentSelectionsForTopic = filterSelections[topic.key] || [];
+        topic.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'chatbot-option-btn';
 
-                // Check if this option is currently selected for this topic
-                const currentSelectionsForTopic = filterSelections[topic.key] || [];
-                if (currentSelectionsForTopic.includes(opt.value)) {
+            if (currentSelectionsForTopic.includes(opt.value)) {
+                btn.classList.add('selected');
+            }
+
+            // Icon (always left, absolutely positioned)
+            if (opt.icon) {
+                const iconCircle = document.createElement('div');
+                iconCircle.className = 'chatbot-btn-icon-circle';
+                const icon = document.createElement('i');
+                icon.className = `ri-${opt.icon}`;
+                icon.setAttribute('aria-hidden', 'true');
+                iconCircle.appendChild(icon);
+                btn.appendChild(iconCircle);
+            }
+
+            // Label (centered)
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'chatbot-btn-label';
+            labelSpan.textContent = opt.label;
+            btn.appendChild(labelSpan);
+
+            btn.onclick = () => {
+                // Toggle selection for this option only
+                let selections = filterSelections[topic.key] || [];
+                const isSelected = selections.includes(opt.value);
+                if (isSelected) {
+                    selections = selections.filter(v => v !== opt.value);
+                    btn.classList.remove('selected');
+                } else {
+                    selections = [...selections, opt.value];
                     btn.classList.add('selected');
                 }
+                filterSelections[topic.key] = selections;
+                showFilterTags();
+                updatePersistentToolbar(topic);
+            };
 
-                // Icon (always left, absolutely positioned)
-                if (opt.icon) {
-                    const iconCircle = document.createElement('div');
-                    iconCircle.className = 'chatbot-btn-icon-circle';
-                    const icon = document.createElement('i');
-                    icon.className = `ri-${opt.icon}`;
-                    icon.setAttribute('aria-hidden', 'true');
-                    iconCircle.appendChild(icon);
-                    btn.appendChild(iconCircle);
-                }
-
-                // Label (centered)
-                const labelSpan = document.createElement('span');
-                labelSpan.className = 'chatbot-btn-label';
-                labelSpan.textContent = opt.label;
-                btn.appendChild(labelSpan);
-
-                btn.onclick = () => {
-                    // Re-fetch current selections for this topic key inside the handler
-                    const currentSelections = filterSelections[topic.key] || [];
-                    const isCurrentlySelected = currentSelections.includes(opt.value);
-                    let newSelectedArray;
-
-                    if (isCurrentlySelected) {
-                        newSelectedArray = currentSelections.filter(v => v !== opt.value);
-                    } else {
-                        newSelectedArray = [...currentSelections, opt.value];
-                    }
-                    filterSelections[topic.key] = newSelectedArray;
-
-                    showFilterTags();
-                    updatePersistentToolbar(topic);
-                    renderButtons(); // Re-render all buttons to update selected states
-                };
-
-                btn.style.animationDelay = (0.08 * idx) + 's';
-                optArea.appendChild(btn);
-                void btn.offsetWidth;
-                btn.style.opacity = '';
-            });
-        }
-
-        renderButtons();
+            btn.style.animationDelay = (0.08 * idx) + 's';
+            optArea.appendChild(btn);
+            void btn.offsetWidth;
+            btn.style.opacity = '';
+        });
 
         setTimeout(() => {
             optArea.scrollTop = 0;
@@ -534,7 +526,11 @@ function updatePersistentToolbar(topic) {
         filterTopicIndex >= 0 &&
         filterTopicIndex < filterTopics.length;
 
-    toolbar.style.display = shouldShow ? "" : "none";
+    if (shouldShow) {
+        toolbar.classList.add('show');
+    } else {
+        toolbar.classList.remove('show');
+    }
 
     if (!shouldShow) return;
 
