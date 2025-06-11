@@ -546,6 +546,61 @@ body {
     font-weight: 600;
 }
 
+/* New office card styles */
+.chatbot-office-card, .chatbot-experience-card {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.chatbot-office-image, .chatbot-experience-image {
+    width: 100%;
+    max-width: 320px;
+    max-height: 160px;
+    object-fit: cover;
+    display: block;
+    margin: 0 auto 0.75em;
+    border-radius: 12px 12px 0 0;
+}
+
+.chatbot-office-title, .chatbot-experience-title {
+    margin: 0 0 0.5em 0;
+    font-size: 1.25em;
+}
+
+.chatbot-office-tags, .chatbot-experience-tags {
+    margin: 0.5em 0 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+}
+
+.chatbot-office-tag, .chatbot-experience-tag {
+    background: #fdeedc;
+    backdrop-filter: var(--glass-blur-light);
+    color: var(--amber-warm);
+    border-radius: 100vmin;
+    padding: 0.125rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    margin: 0;
+    border: 2px solid var(--amber-glow);
+    display: inline-block;
+    transition: all 0.3s var(--fluid-ease);
+    white-space: nowrap;
+    text-transform: capitalize;
+}
+
+.chatbot-option-btn {
+    width: 100%;
+    /* ...existing button styles... */
+}
+
+.chatbot-office-card hr, .chatbot-experience-card hr {
+    border: var(--glass-border);
+    margin-bottom: -0.25rem;
+}
+
 /* Responsive styles */
 @media (max-width: 900px) {
     #chatbot-header {

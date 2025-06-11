@@ -633,11 +633,16 @@ function updatePersistentToolbar(topic) {
     btnStartOver.onclick = chatbotStart;
 }
 
-// Hide toolbar for non-filter steps (results, offices, etc.)
 function chatbotShowResults(filters) {
     hideToolbar();
     chatbotState.filters = filters; // Ensure this is up-to-date
     showFilterTags();
+
+    // --- Clear all previous messages before showing results ---
+    const msgArea = document.getElementById('chatbot-messages');
+    if (msgArea) {
+        msgArea.innerHTML = '';
+    }
 
     let results = experiences;
     // Filter by major (department attributes)
@@ -726,25 +731,37 @@ function chatbotShowResults(filters) {
         return;
     }
 
-    addMessage("Here are some opportunities for you:", "bot", () => {
-        showExperienceResultsList(results, 0);
-    });
+    // Directly show results, no intro message
+    showExperienceResultsList(results, 0);
 }
 
-// Modular function to show experience results (with image/link if present)
 function showExperienceResultsList(list, startIdx) {
-    const endIdx = Math.min(startIdx + 2, list.length);
+    const endIdx = Math.min(startIdx + 4, list.length); // Show up to 4 at a time
+    const names = [];
     for (let i = startIdx; i < endIdx; i++) {
-        let msg = `<strong>${list[i].name}</strong>: ${summarizeInfo(list[i].description)}`;
-        if (list[i].link) {
-            msg += ` <a href="${list[i].link}" target="_blank" rel="noopener">Learn more</a>`;
-        }
-        // Optionally show image if present
-        if (list[i].image) {
-            msg = `<img src="${list[i].image}" alt="${list[i].name}" style="max-width:80px;max-height:80px;vertical-align:middle;margin-right:0.5em;border-radius:8px;float:left;">` + msg;
-        }
-        addMessage(msg, "bot");
+        // Display names in lowercase, but keep HTML bold
+        names.push(`<b>${list[i].name.toLowerCase()}</b>`);
     }
+
+    if (names.length) {
+        let message = "";
+
+        if (names.length === 1) {
+            const plain = list[startIdx].name.trim().toLowerCase();
+            const firstLetter = plain.charAt(0);
+            const article = ['a', 'e', 'i', 'o', 'u'].includes(firstLetter) ? 'an' : 'a';
+            message = `Based on your interests, you might be interested in ${article} ${names[0]}.`;
+        } else if (names.length === 2) {
+            message = `Based on your interests, you might be interested in ${names[0]} or ${names[1]}.`;
+        } else {
+            const allButLast = names.slice(0, -1).join(", ");
+            const last = names[names.length - 1];
+            message = `Based on your interests, you might be interested in ${allButLast}, or ${last}.`;
+        }
+
+        addMessage(message, "bot");
+    }
+
     if (endIdx < list.length) {
         setOptions([
             {
@@ -761,44 +778,65 @@ function showExperienceResultsList(list, startIdx) {
     }
 }
 
-// Update chatbotShowOffices to use description/link if present
+
+// Modular function to show office results as cards with matched tags
+function showOfficesResultsList(list, startIdx, userTags) {
+    const endIdx = Math.min(startIdx + 2, list.length);
+    for (let i = startIdx; i < endIdx; i++) {
+        const office = list[i];
+        // Find matching tags (case-insensitive)
+        const matchedTags = (office.tags || []).filter(tag =>
+            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
+        );
+        let msg = `
+            <div class="chatbot-office-card">
+                ${office.image ? `<img src="${office.image}" alt="${office.name}" class="chatbot-office-image">` : ""}
+                <div class="chatbot-office-content">
+                    <h2 class="chatbot-office-title">${office.name}</h2>
+                    <hr>
+                    <p>${summarizeInfo(office.description || office.info)}</p>
+                    ${office.link ? `<button class="chatbot-option-btn" onclick="window.open('${office.link}', '_blank')">Learn more</button>` : ""}
+                    ${matchedTags.length > 0 ? `
+                        <div class="chatbot-office-tags">
+                            ${matchedTags.map(tag => `<span class="chatbot-office-tag">${tag}</span>`).join('')}
+                        </div>
+                    ` : ""}
+                </div>
+            </div>
+        `;
+        addMessage(msg, "bot");
+    }
+    if (endIdx < list.length) {
+        setOptions([
+            {
+                label: "Show More",
+                icon: "arrow-down-line",
+                onClick: () => {
+                    setOptions([]);
+                    showOfficesResultsList(list, endIdx, userTags);
+                }
+            }
+        ]);
+    } else {
+        setOptions([
+            { label: "Search Again", icon: "search-line", onClick: () => {
+                filterTopicIndex = 0;
+                filterSelections = {};
+                chatbotAskFilterTopic();
+            }}
+        ]);
+    }
+}
+
+// Update chatbotShowOffices to use the new card layout and tags
 function chatbotShowOffices() {
     hideToolbar();
     addMessage("Campus offices that can help:", "bot", () => {
-        function showOfficesList(list, startIdx) {
-            const endIdx = Math.min(startIdx + 2, list.length);
-            for (let i = startIdx; i < endIdx; i++) {
-                let msg = `<strong>${list[i].name}</strong>: ${summarizeInfo(list[i].description || list[i].info)}`;
-                if (list[i].link) {
-                    msg += ` <a href="${list[i].link}" target="_blank" rel="noopener">Learn more</a>`;
-                }
-                if (list[i].image) {
-                    msg = `<img src="${list[i].image}" alt="${list[i].name}" style="max-width:80px;max-height:80px;vertical-align:middle;margin-right:0.5em;border-radius:8px;float:left;">` + msg;
-                }
-                addMessage(msg, "bot");
-            }
-            if (endIdx < list.length) {
-                setOptions([
-                    {
-                        label: "Show More",
-                        icon: "arrow-down-line",
-                        onClick: () => {
-                            setOptions([]);
-                            showOfficesList(list, endIdx);
-                        }
-                    }
-                ]);
-            } else {
-                setOptions([
-                    { label: "Search Again", icon: "search-line", onClick: () => {
-                        filterTopicIndex = 0;
-                        filterSelections = {};
-                        chatbotAskFilterTopic();
-                    }}
-                ]);
-            }
-        }
-        showOfficesList(offices, 0);
+        // Collect user tags from major and filters
+        let userTags = [];
+        if (chatbotState.major) userTags.push(chatbotState.major);
+        userTags = userTags.concat(Object.values(filterSelections).flat());
+        showOfficesResultsList(offices, 0, userTags);
     });
 }
 

@@ -57,47 +57,48 @@
             "tags": ["shadowing", "not paid", "career", "off-campus", "exploration"]
         }
     ],
+
     "offices": [
         {
             "name": "Career Development Center",
             "description": "The Career Development Center advertises paid jobs, internships, and fellowships through Handshake. They host career fairs and offer resume and job application help.",
             "link": "https://cdc.humboldt.edu/",
-            "image": "",
+            "image": "placeholder.png",
             "tags": ["paid", "career", "Handshake"]
         },
         {
             "name": "Center for Community Based Learning (CCBL)",
             "description": "CCBL supports course-based, hands-on learning: internships, practicums, and service learning. They help with course design, S4 reporting, and community connections.",
             "link": "https://ccbl.humboldt.edu/",
-            "image": "",
+            "image": "placeholder.png",
             "tags": ["internship", "service learning", "practicum"]
         },
         {
             "name": "Youth Educational Services (YES)",
             "description": "YES offers volunteer opportunities, events, and leadership roles. Time commitment varies by program.",
             "link": "https://humboldt.edu/yes",
-            "image": "",
+            "image": "placeholder.png",
             "tags": ["volunteer", "leadership", "community"]
         },
         {
             "name": "College Corps",
             "description": "College Corps is a service fellowship: $10,000 for 450 hours of service in education, climate, or food insecurity. Hours may count for other requirements.",
             "link": "https://humboldt.edu/college-corps",
-            "image": "",
+            "image": "placeholder.png",
             "tags": ["service", "fellowship", "paid"]
         },
         {
             "name": "SPF Engagement Hub",
             "description": "SPF Engagement Hub lists externally funded fellowships, research, and paid internships for students and faculty. Opportunities change dynamically.",
             "link": "https://humboldt.edu/spf-engagement-hub",
-            "image": "",
+            "image": "placeholder.png",
             "tags": ["fellowship", "research", "paid"]
         },
         {
             "name": "Library",
             "description": "The Library offers paid, on-campus internships involving research and scholarship, available year-round.",
             "link": "https://library.humboldt.edu/",
-            "image": "",
+            "image": "placeholder.png",
             "tags": ["paid", "research", "on-campus"]
         }
     ],
