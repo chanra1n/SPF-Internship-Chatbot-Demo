@@ -14,8 +14,68 @@
     <div id="chatbot-container">
         <div id="chatbot-header">Experience Finder Chatbot</div>
         <div id="chatbot-messages"></div>
-        <div id="chatbot-options"></div>
+        <div id="chatbot-options-drawer">
+            <div id="chatbot-drawer-handle">
+                <span></span>
+            </div>
+            <!-- Toolbar: Position fixed by HTML, after handle -->
+            <div id="chatbot-toolbar" class="chatbot-toolbar">
+                <button id="chatbot-toolbar-back" class="chatbot-option-btn chatbot-toolbar-btn nav" title="Back">
+                    <i class="ri-arrow-go-back-line"></i>
+                </button>
+                <button id="chatbot-toolbar-next" class="chatbot-option-btn chatbot-toolbar-btn nav" title="Next">
+                    <i class="ri-arrow-right-line"></i>
+                </button>
+                <button id="chatbot-toolbar-results" class="chatbot-option-btn chatbot-toolbar-btn" title="Show Results">
+                    <i class="ri-search-line"></i>
+                    <span class="chatbot-btn-label">Show Results</span>
+                </button>
+                <button id="chatbot-toolbar-startover" class="chatbot-option-btn chatbot-toolbar-btn" title="Start Over">
+                    <i class="ri-refresh-line"></i>
+                    <span class="chatbot-btn-label">Start Over</span>
+                </button>
+            </div>
+            <!-- Filter Tags: Position fixed by HTML, after toolbar -->
+            <div id="chatbot-filter-tags"></div>
+            <!-- Options: Position fixed by HTML, after filter tags -->
+            <div id="chatbot-options"></div>
+        </div>
     </div>
 <script src="bot.js"></script>
+<script>
+    // Drawer open/close logic
+    const drawer = document.getElementById('chatbot-options-drawer');
+    const handle = document.getElementById('chatbot-drawer-handle');
+    let drawerOpen = true;
+    let startY = null, currentY = null, dragging = false;
+
+    function setDrawer(open) {
+        drawerOpen = open;
+        drawer.classList.toggle('closed', !open);
+    }
+    handle.addEventListener('click', () => setDrawer(!drawerOpen));
+
+    // Touch/drag support for mobile
+    handle.addEventListener('touchstart', e => {
+        dragging = true;
+        startY = e.touches[0].clientY;
+    });
+    handle.addEventListener('touchmove', e => {
+        if (!dragging) return;
+        currentY = e.touches[0].clientY;
+    });
+    handle.addEventListener('touchend', () => {
+        if (!dragging) return;
+        if (currentY && startY && currentY - startY > 30) setDrawer(false);
+        if (currentY && startY && startY - currentY > 30) setDrawer(true);
+        dragging = false;
+        startY = currentY = null;
+    });
+
+    // Optional: allow clicking the handle to open if closed
+    drawer.addEventListener('click', e => {
+        if (drawer.classList.contains('closed') && e.target === handle) setDrawer(true);
+    });
+</script>
 </body>
 </html>

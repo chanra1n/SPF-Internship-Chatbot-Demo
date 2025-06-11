@@ -123,16 +123,66 @@ html {
         }
         #chatbot-options {
             flex: 0 0 auto;
-            padding: 1.5rem 0 2rem 0; /* 24px 0 32px 0 */
+            padding: 1.5rem 0 2rem 0;
             background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.07) 100%);
             border-top: 1px solid rgba(255,255,255,0.15);
-            display: flex;
-            flex-wrap: wrap;
-            gap: 1.125rem; /* 18px */
-            justify-content: center;
+            display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.125rem;
+    justify-content: center;
+    align-items: flex-start;
             backdrop-filter: blur(12px) saturate(160%);
             box-shadow: 0 -3px 12px 0 rgba(0,0,0,0.08);
             border-radius: 20px 20px 0px 0px;
+            max-height: 300px; /* Limit height */
+            overflow-y: auto;  /* Enable vertical scroll if needed */
+            /* align-items: flex-start; */ /* Duplicated from above */
+            /* Prevent content from being cut off by adding padding and box-sizing */
+            box-sizing: border-box;
+            padding: 1.5rem 1em; /* Added horizontal padding */
+            /* Always show full buttons, allow scrolling for overflow */
+            min-height: 0;
+            margin-top: 0;
+        }
+
+        /* Make a single direct option button span all columns */
+        #chatbot-options > .chatbot-option-btn:first-child:last-child {
+            grid-column: 1 / -1;
+        }
+
+        /* Ensure columns don't overflow horizontally */
+        #chatbot-options > div {
+            min-width: 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        /* Prevent buttons from being clipped at the bottom */
+        .chatbot-option-btn {
+            box-sizing: border-box;
+            min-width: 0;
+            margin-bottom: 0.7em;
+            min-height: 2.6em;
+            font-size: 1.05em;
+        }
+        /* For mobile, reduce max-height for options */
+        @media (max-width: 600px) {
+            #chatbot-options {
+                padding: 1rem 3vw; /* Adjusted from 1rem 3vw 1.5rem 3vw */
+                gap: 0.8rem;
+                /* flex-direction: column; */ /* This is for flex, #chatbot-options is grid */
+                /* align-items: stretch; */ /* This is for flex, #chatbot-options is grid */
+                grid-template-columns: 1fr; /* Ensure single column for options */
+                max-height: 300px; /* Keep if needed */
+                min-height: 0; /* Keep if needed */
+            }
+            .chatbot-option-btn {
+                font: 600 1rem 'Poppins', sans-serif; /* Scales with new 18px base: 18px */
+                padding: 0.6rem 0.75rem; /* Reduce top/bottom padding for mobile */
+                min-width: 0;
+                width: 100%; /* Ensure buttons take full width of their grid cell */
+                border-radius: 100vmin; /* 0.8rem at 18px base font -> 14.4px, rounded to 14px */
+                margin-bottom: 0.5em; /* Keep or adjust as needed */
+            }
         }
         .chatbot-option-btn {
             display: flex;
@@ -209,6 +259,11 @@ html {
     position: relative;
     z-index: 1;
 }
+
+.chatbot-option-btn.nav {
+    padding: 1em!
+}
+
         .chatbot-option-btn {
     padding-left: 3.5em; /* Make space for the absolutely positioned icon */
 }
@@ -252,17 +307,21 @@ html {
                 min-width: 0;
             }
             #chatbot-options {
-                padding: 1rem 3vw;
+                padding: 1rem 3vw; /* Adjusted from 1rem 3vw 1.5rem 3vw */
                 gap: 0.8rem;
-                flex-direction: column;
-                align-items: stretch; /* Make buttons full width */
+                /* flex-direction: column; */ /* This is for flex, #chatbot-options is grid */
+                /* align-items: stretch; */ /* This is for flex, #chatbot-options is grid */
+                grid-template-columns: 1fr; /* Ensure single column for options */
+                max-height: 300px; /* Keep if needed */
+                min-height: 0; /* Keep if needed */
             }
             .chatbot-option-btn {
                 font: 600 1rem 'Poppins', sans-serif; /* Scales with new 18px base: 18px */
                 padding: 0.6rem 0.75rem; /* Reduce top/bottom padding for mobile */
                 min-width: 0;
-                width: auto; /* Allow stretching by flex container */
+                width: 100%; /* Ensure buttons take full width of their grid cell */
                 border-radius: 100vmin; /* 0.8rem at 18px base font -> 14.4px, rounded to 14px */
+                margin-bottom: 0.5em; /* Keep or adjust as needed */
             }
         }
         @media (max-width: 400px) { /* Smaller mobile phones */
@@ -289,3 +348,130 @@ html {
                 padding: 0.5rem 0.5rem; /* Reduce top/bottom padding for small mobile */
             }
         }
+        /* Drawer container for options */
+#chatbot-options-drawer {
+    position: relative;
+    width: 100%;
+    background: none;
+    transition: max-height 0.35s cubic-bezier(0.68,-0.3,0.32,1.15);
+    max-height: 340px;
+    z-index: 10;
+    box-sizing: border-box;
+    will-change: max-height;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    position: relative;
+    padding-bottom: 0; /* Remove extra space, let toolbar handle it */
+}
+#chatbot-options-drawer.closed {
+    max-height: 32px;
+    overflow: hidden;
+}
+#chatbot-drawer-handle {
+    width: 100%;
+    height: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    background: transparent;
+    position: relative;
+    z-index: 11;
+    user-select: none;
+    touch-action: pan-y;
+}
+#chatbot-drawer-handle span {
+    display: block;
+    width: 44px;
+    height: 6px;
+    border-radius: 3px;
+    background: #b7c9b7;
+    margin: -8px auto 0 auto;
+    box-shadow: 0 1px 4px #0001;
+    transition: background 0.2s;
+}
+#chatbot-options-drawer.closed #chatbot-drawer-handle span {
+    background: #b7c9b7;
+}
+#chatbot-options {
+    /* ...existing styles... */
+    transition: opacity 0.2s;
+    opacity: 1;
+    padding-bottom: 5.5rem; /* Add padding-bottom so content is not hidden behind toolbar */
+}
+#chatbot-options-drawer.closed #chatbot-options {
+    opacity: 0.5;
+    pointer-events: none;
+}
+#chatbot-filter-tags {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.5em 1em 0.2em 1em;
+    background: transparent;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    justify-content: center;
+    z-index: 12;
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+#chatbot-toolbar {
+    /* border-top: none; */ /* This was an old style, the current one below is active */
+    /* border-bottom: 1px solid rgba(255,255,255,0.18); */ /* Old style */
+    /* padding-top: 0.5rem; */ /* Old style */
+    /* padding-bottom: 0.5rem; */ /* Old style */
+    /* margin-top: 0; */ /* Old style */
+    /* margin-bottom: 0.25rem; */ /* This was from a previous suggestion, let's refine */
+    display: flex !important; /* Keep flex */
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center; /* Vertically center buttons */
+    gap: 0.25rem;
+    background: transparent; /* Current style */
+    border-radius: 1.2em 1.2em 0 0; /* Current style */
+    padding: 0.5em 0.7em; /* Adjusted padding for more vertical space */
+    min-height: auto; /* Allow height to be determined by content + padding */
+    position: relative; /* Current style */
+    z-index: 20; /* Current style */
+    font-size: 0.92em; /* Current style */
+    /* Make it visually smaller */
+    /* font-size: 0.95em; */ /* Old style */
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 0.25em;
+    box-sizing: border-box; /* Ensure padding is included in width/height */
+    width: 100%; /* Ensure it takes available width within constraints */
+}
+#chatbot-toolbar .chatbot-option-btn {
+    min-width: 0;
+    flex: 0 0 auto;
+    /* margin-bottom: 0; */ /* Already set in more specific rule below */
+    font-size: 0.95em; /* This is overridden by the more specific rule below */
+    padding: 0.35em 1.1em 0.35em 2.2em; /* This is overridden by the more specific rule below */
+    border-radius: 1.2em; /* This is overridden by the more specific rule below */
+    height: 2.2em; /* This is overridden by the more specific rule below */
+}
+/* Toolbar buttons: smaller, lighter, more distinct */
+#chatbot-toolbar .chatbot-option-btn {
+    font-size: 0.92em !important;
+    padding: 0.25em 0.75em 0.25em 0.75em !important;
+    border-radius: 1.2em !important;
+    height: auto;
+    min-height: 2em;
+    min-width: 0 !important;
+    background: linear-gradient(135deg, rgba(0, 99, 65, 0.55) 0%, rgba(0, 99, 65, 0.35) 100%);
+    color: #ffffff;
+    box-shadow: 0 1px 4px 0 rgba(0,0,0,0.07) !important;
+    opacity: 1 !important;
+    animation: none !important;
+    font-weight: 500 !important;
+    margin-bottom: 0 !important;
+    transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: left;
+    width: initial;
+}
