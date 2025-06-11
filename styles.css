@@ -476,7 +476,7 @@ body {
     display: inline-block;
     transition: all 0.3s var(--fluid-ease);
     white-space: nowrap;
-    animation: bubbleFloatTag 6s infinite ease-in-out alternate, shimmerTag 4s infinite linear;
+    animation: bubbleFloatTag 5s infinite ease-in-out alternate, shimmerTag 4s infinite linear;
     /* Each tag will get a different delay via nth-child for organic movement */
 }
 
