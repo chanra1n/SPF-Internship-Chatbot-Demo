@@ -176,6 +176,11 @@
 
             // Hide tag area if no tags, show if there are tags
             tagArea.style.display = hasTags ? "" : "none";
+
+            // Always scroll tags to the rightmost position
+            setTimeout(() => {
+                tagArea.scrollLeft = tagArea.scrollWidth;
+            }, 0);
         }
 
         // Add CSS for filter tags (only once)
@@ -186,13 +191,14 @@
                 .chatbot-filter-tag {
                     background: rgba(0,99,65,0.09);
                     color: #006341;
-                    border-radius: 12px;
-                    padding: 0.2em 0.8em;
+                    border-radius: 100vmin;
+                    padding: 0.25em 1em;
                     font-size: 0.95em;
                     font-weight: 500;
                     margin: 0 0.1em;
                     border: 1px solid #e3f1e6;
                     display: inline-block;
+                    white-space: nowrap;
                 }
             `;
             document.head.appendChild(style);
@@ -204,10 +210,12 @@
             if (msgArea) msgArea.scrollTop = msgArea.scrollHeight;
         }
 
-        // Utility: always scroll options to top
+        // Utility: always scroll options to top and messages to bottom
         function scrollOptionsToTop() {
             const optArea = document.getElementById('chatbot-options');
             if (optArea) optArea.scrollTop = 0;
+            // Always scroll messages to bottom when options change
+            scrollMessagesToBottom();
         }
 
         // Typing animation for bot messages
@@ -313,7 +321,7 @@
                 colWrap.appendChild(col2);
                 optArea.appendChild(colWrap);
             }
-            // After rendering, always scroll options to top
+            // After rendering, always scroll options to top and messages to bottom
             setTimeout(scrollOptionsToTop, 0);
         }
 
@@ -359,7 +367,7 @@
             );
             if (mode !== "student") {
                 addMessage("Student mode is the main focus for this demo. Please select 'I'm a Student' to continue.", "bot", () => {
-                    setOptions([{ label: "Back", icon: "arrow-go-back-line", onClick: chatbotStart }]);
+                    setOptions([{ label: "Back", icon: "arrow-left-line", onClick: chatbotStart }]);
                 });
                 return;
             }
@@ -503,6 +511,7 @@
                 filterSelections[topic.key] = selections;
                 showFilterTags();
                 updatePersistentToolbar(topic);
+                scrollMessagesToBottom(); // Ensure messages are always scrolled down after selection
             };
 
             btn.style.animationDelay = (0.08 * idx) + 's';
@@ -513,6 +522,7 @@
 
         setTimeout(() => {
             optArea.scrollTop = 0;
+            scrollMessagesToBottom();
         }, 0);
 }
 
@@ -535,14 +545,39 @@ function updatePersistentToolbar(topic) {
     if (!shouldShow) return;
 
     const btnBack = document.getElementById('chatbot-toolbar-back');
-    btnBack.style.display = filterTopicIndex > 0 ? '' : 'none';
+    const btnNext = document.getElementById('chatbot-toolbar-next');
+
+    const showBack = filterTopicIndex > 0;
+    const showNext = filterTopicIndex < filterTopics.length - 1;
+
+    btnBack.style.display = showBack ? '' : 'none';
+    btnNext.style.display = showNext ? '' : 'none';
+
+    // Remove any previous text label
+    btnBack.querySelector('.chatbot-btn-label')?.remove();
+    btnNext.querySelector('.chatbot-btn-label')?.remove();
+
+    // If only one nav button is visible, add text label
+    if (showBack && !showNext) {
+        // Only Back is visible
+        const label = document.createElement('span');
+        label.className = 'chatbot-btn-label';
+        label.textContent = 'Back';
+        btnBack.appendChild(label);
+    } else if (!showBack && showNext) {
+        // Only Next is visible
+        const label = document.createElement('span');
+        label.className = 'chatbot-btn-label';
+        label.textContent = 'Next';
+        btnNext.appendChild(label);
+    }
+    // If both are visible, just show icons (no label)
+
     btnBack.onclick = () => {
         filterTopicIndex--;
         chatbotAskFilterTopic();
     };
 
-    const btnNext = document.getElementById('chatbot-toolbar-next');
-    btnNext.style.display = filterTopicIndex < filterTopics.length - 1 ? '' : 'none';
     btnNext.onclick = () => {
         filterTopicIndex++;
         chatbotAskFilterTopic();
@@ -632,7 +667,7 @@ function chatbotShowResults(filters) {
             );
         } else {
             addMessage("No matches found. Try different filters.", "bot", () => {
-                setOptions([{ label: "Start Over", icon: "refresh-line", onClick: chatbotStart }]);
+                setOptions([{ label: "Restart", icon: "refresh-line", onClick: chatbotStart }]);
             });
         }
         return;
@@ -662,7 +697,7 @@ function chatbotShowOffices() {
                 const tagStr = offices[i].tags.map(t => `#${t}`).join(' ');
                 addMessage(`${offices[i].name}: ${offices[i].info}\n${tagStr}`, "bot", () => showOffice(i + 1));
             } else {
-                setOptions([{ label: "Start Over", icon: "refresh-line", onClick: chatbotStart }]);
+                setOptions([{ label: "Restart", icon: "refresh-line", onClick: chatbotStart }]);
             }
         }
         showOffice(0);
