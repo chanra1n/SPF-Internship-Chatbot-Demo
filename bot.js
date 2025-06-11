@@ -853,4 +853,11 @@ function hideLoadingOverlay() {
 }
 
 // Start chatbot on page load
-window.onload = chatbotStart;
+window.onload = function() {
+    // Always reload from server, not cache
+    if (window.performance && window.performance.navigation && window.performance.navigation.type === 2) {
+        window.location.reload(true);
+    } else {
+        chatbotStart();
+    }
+};
