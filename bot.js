@@ -781,7 +781,7 @@ function showExperienceResultsList(list, startIdx) {
 
     // Build clickable names for all results
     const names = list.map(exp =>
-        `<span class="chatbot-def-term" data-exp-name="${encodeURIComponent(exp.name)}"><b>${exp.name.toLowerCase()}</b></span>`
+        `<span class="chatbot-def-term" data-exp-name="${encodeURIComponent(exp.name)}"><b>${exp.name.toLowerCase()}<i class="ri-information-fill chatbot-term-info"></i></b></span>`
     );
 
     let message = "";
