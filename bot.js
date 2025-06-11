@@ -645,40 +645,53 @@ function chatbotShowResults(filters) {
     }
 
     let results = experiences;
-    // Filter by major (department attributes)
+
+    // Gather all user tags (major + filters)
+    let userTags = [];
     if (chatbotState.major && departmentAttributes[chatbotState.major]) {
-        results = results.filter(exp =>
-            departmentAttributes[chatbotState.major].some(tag =>
-                exp.tags.includes(tag)
-            ) || exp.tags.includes(chatbotState.major.toLowerCase())
-        );
+        userTags = [...departmentAttributes[chatbotState.major]];
     }
-    // Filter by selected filters
-    if (filters.length) {
-        results = results.filter(exp =>
-            filters.every(f =>
-                exp.tags.some(tag => tag.toLowerCase().includes(f.toLowerCase()))
-            )
-        );
+    if (chatbotState.major) {
+        userTags.push(chatbotState.major.toLowerCase());
     }
+    userTags = userTags.concat(filters.map(f => f.toLowerCase()));
 
-    // --- Sort by best match (most filter tags matched) ---
+    // --- Compute match score for each experience ---
     function matchScore(exp) {
-        let score = 0;
-        if (chatbotState.major && departmentAttributes[chatbotState.major]) {
-            score += departmentAttributes[chatbotState.major].filter(tag => exp.tags.includes(tag)).length;
-        }
-        score += filters.filter(f =>
-            exp.tags.some(tag => tag.toLowerCase().includes(f.toLowerCase()))
-        ).length;
-        return score;
+        // Count how many userTags are present in exp.tags (case-insensitive)
+        let expTags = (exp.tags || []).map(t => t.toLowerCase());
+        return userTags.reduce((score, tag) => expTags.includes(tag) ? score + 1 : score, 0);
     }
-    results = results
-        .map(exp => ({ ...exp, _score: matchScore(exp) }))
-        .sort((a, b) => b._score - a._score);
 
-    // If no results, relax filters as before
-    if (results.length === 0) {
+    // Attach score to each experience
+    let scoredResults = results.map(exp => ({ ...exp, _score: matchScore(exp) }));
+
+    // Find the highest score
+    let maxScore = 0;
+    scoredResults.forEach(exp => { if (exp._score > maxScore) maxScore = exp._score; });
+
+    let finalResults = [];
+    let usedIds = new Set();
+
+    // Helper to add results for a given score, up to a limit if provided
+    function addResultsForScore(score, limit) {
+        let group = scoredResults.filter(exp => exp._score === score && !usedIds.has(exp.name));
+        if (limit !== undefined) group = group.slice(0, limit);
+        group.forEach(exp => usedIds.add(exp.name));
+        finalResults = finalResults.concat(group);
+    }
+
+    // Add all with maxScore, then maxScore-1, ... down to 2
+    for (let score = maxScore; score >= 2; score--) {
+        if (score === 2) {
+            addResultsForScore(score, 3); // Only up to 3 for 2-matches
+        } else {
+            addResultsForScore(score);
+        }
+    }
+
+    // If nothing matched at all, fallback to previous relaxation logic
+    if (finalResults.length === 0) {
         // Try relaxing filters one by one (from last to first)
         let relaxedResults = [];
         let relaxedFilters = [...filters];
@@ -706,19 +719,15 @@ function chatbotShowResults(filters) {
                 .map(exp => ({ ...exp, _score: matchScore(exp) }))
                 .sort((a, b) => b._score - a._score);
             addMessage(
-                "No matches found for all your filters. " +
-                (removed.length > 0
-                    ? `Removed filter${removed.length > 1 ? "s" : ""}: ${removed.join(", ")}.`
-                    : ""
-                ) +
-                " Here are some close matches:",
+                "We weren't able to find any experiences that matched all your filters, so we relaxed them a bit. " +
+                " Here are some options that might interest you, based on your major and remaining filters.",
                 "bot",
                 () => {
                     showExperienceResultsList(relaxedResults, 0);
                 }
             );
         } else {
-            addMessage("No matches found. Try different filters.", "bot", () => {
+            addMessage("No matches found, sorry. Try different filters.", "bot", () => {
                 setOptions([
                     { label: "Try Different Filters", icon: "filter-line", onClick: () => {
                         filterTopicIndex = 0;
@@ -731,8 +740,10 @@ function chatbotShowResults(filters) {
         return;
     }
 
-    // Directly show results, no intro message
-    showExperienceResultsList(results, 0);
+    // Sort finalResults by score descending, then by name for consistency
+    finalResults.sort((a, b) => b._score - a._score || a.name.localeCompare(b.name));
+
+    showExperienceResultsList(finalResults, 0);
 }
 
 function showExperienceResultsList(list, startIdx) {
@@ -831,7 +842,7 @@ function showOfficesResultsList(list, startIdx, userTags) {
 // Update chatbotShowOffices to use the new card layout and tags
 function chatbotShowOffices() {
     hideToolbar();
-    addMessage("Here are some campus resources you may find helpful.", "bot", () => {
+    addMessage("Additionally, here are some campus resources you may find helpful.", "bot", () => {
         // Collect user tags from major and filters
         let userTags = [];
         if (chatbotState.major) userTags.push(chatbotState.major);
@@ -843,7 +854,10 @@ function chatbotShowOffices() {
 // Utility: summarize description to 2 sentences max
 function summarizeInfo(info) {
     if (!info) return "";
-    const sentences = info.match(/[^.!?]+[.!?]+/g);
+    // Prevent splitting after single-letter abbreviations like Y.E.S.
+    // Replace periods between single letters with nothing temporarily
+    let safeInfo = info.replace(/\b([A-Z])\.\s?/g, '$1');
+    const sentences = safeInfo.match(/[^.!?]+[.!?]+/g);
     if (!sentences) return info;
     return sentences.slice(0, 2).join(' ').trim();
 }

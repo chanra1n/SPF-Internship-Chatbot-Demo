@@ -61,45 +61,102 @@
     "offices": [
         {
             "name": "Career Development Center",
-            "description": "The Career Development Center advertises paid jobs, internships, and fellowships through Handshake. They host career fairs and offer resume and job application help.",
+            "description": "The Career Development Center advertises paid opportunities such as jobs, paid internships, and fellowships through Handshake. They host campus events like the Career Fair and Part-time Job & Volunteer Fair, and offer career advising, resume writing, and job application support to students. Handshake is available for faculty, staff, and external partners to post opportunities.",
             "link": "https://cdc.humboldt.edu/",
             "image": "placeholder.png",
-            "tags": ["paid", "career", "Handshake"]
+            "tags": [
+                "paid",
+                "career",
+                "Handshake",
+                "career fair",
+                "job fair",
+                "resume help",
+                "job applications",
+                "advising",
+                "internship",
+                "fellowship",
+                "event"
+            ]
         },
         {
             "name": "Center for Community Based Learning (CCBL)",
-            "description": "CCBL supports course-based, hands-on learning: internships, practicums, and service learning. They help with course design, S4 reporting, and community connections.",
+            "description": "The Center for Community Based Learning (CCBL) supports and promotes course-based, hands-on learning practices such as internships, practicums, and service learning courses. CCBL assists faculty with course design and community connections, students with community engagement and S4 reporting, and community partners with site approval and opportunity development.",
             "link": "https://ccbl.humboldt.edu/",
             "image": "placeholder.png",
-            "tags": ["internship", "service learning", "practicum"]
+            "tags": [
+                "internship",
+                "service learning",
+                "practicum",
+                "course design",
+                "community engagement",
+                "S4 reporting",
+                "faculty support",
+                "student support",
+                "community partner"
+            ]
         },
         {
             "name": "Youth Educational Services (YES)",
-            "description": "YES offers volunteer opportunities, events, and leadership roles. Time commitment varies by program.",
+            "description": "Youth Educational Services (Y.E.S.) offers a variety of community-based volunteer opportunities, from large-scale events to semester-long programs. Students can participate in one-day service events, weekly drop-in activities, or semester-long cohorts. Leadership positions and internal scholarships are available for program directors. Some programs are affiliated with a 1-unit course.",
             "link": "https://humboldt.edu/yes",
             "image": "placeholder.png",
-            "tags": ["volunteer", "leadership", "community"]
+            "tags": [
+                "volunteer",
+                "leadership",
+                "community",
+                "service",
+                "event",
+                "cohort",
+                "scholarship",
+                "student-led",
+                "course credit"
+            ]
         },
         {
             "name": "College Corps",
-            "description": "College Corps is a service fellowship: $10,000 for 450 hours of service in education, climate, or food insecurity. Hours may count for other requirements.",
+            "description": "College Corps is a service fellowship that provides students with $10,000 in college funding for completing 450 hours of service in education, climate action, or food insecurity. Hours may also count toward service or internship requirements for other courses. College Corps prepares students for their future careers through community service.",
             "link": "https://humboldt.edu/college-corps",
             "image": "placeholder.png",
-            "tags": ["service", "fellowship", "paid"]
+            "tags": [
+                "service",
+                "fellowship",
+                "paid",
+                "education",
+                "climate",
+                "food insecurity",
+                "community",
+                "career preparation",
+                "internship credit"
+            ]
         },
         {
             "name": "SPF Engagement Hub",
-            "description": "SPF Engagement Hub lists externally funded fellowships, research, and paid internships for students and faculty. Opportunities change dynamically.",
+            "description": "The SPF Engagement Hub is a website that showcases externally funded opportunities for students and faculty, including fellowships, research opportunities, and paid internships. All opportunities are tied to existing grants and contracts and change dynamically.",
             "link": "https://humboldt.edu/spf-engagement-hub",
             "image": "placeholder.png",
-            "tags": ["fellowship", "research", "paid"]
+            "tags": [
+                "fellowship",
+                "research",
+                "paid",
+                "internship",
+                "grant",
+                "external funding",
+                "dynamic"
+            ]
         },
         {
             "name": "Library",
-            "description": "The Library offers paid, on-campus internships involving research and scholarship, available year-round.",
+            "description": "The Cal Poly Humboldt Library offers several paid, on-campus internship opportunities for students, available year-round. These internships involve research and scholarship, in addition to the Library's core services for the campus community.",
             "link": "https://library.humboldt.edu/",
             "image": "placeholder.png",
-            "tags": ["paid", "research", "on-campus"]
+            "tags": [
+                "paid",
+                "research",
+                "on-campus",
+                "internship",
+                "scholarship",
+                "year-round"
+            ]
         }
     ],
 
