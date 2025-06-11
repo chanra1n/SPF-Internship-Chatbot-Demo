@@ -101,7 +101,7 @@ body {
     backdrop-filter: var(--glass-blur-medium);
     color: var(--pearl-white);
     padding: 1rem 1.5rem;
-    font: 700 1.25rem 'Poppins', sans-serif;
+    font: 700 1rem 'Poppins', sans-serif;
     letter-spacing: 0.5px;
     text-align: center;
     border-bottom: var(--glass-border);
@@ -361,7 +361,7 @@ body {
 
 #chatbot-drawer-handle {
     width: 100%;
-    height: 40px;
+    height: 30px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -441,7 +441,36 @@ body {
     display: inline-block;
     transition: all 0.3s var(--fluid-ease);
     white-space: nowrap;
+    animation: bubbleFloatTag 6s infinite ease-in-out alternate, shimmerTag 4s infinite linear;
+    /* Each tag will get a different delay via nth-child for organic movement */
 }
+
+@keyframes bubbleFloatTag {
+    0%   { transform: translateY(0) scale(1); }
+    20%  { transform: translateY(-1.5px) scale(1.02); }
+    40%  { transform: translateY(1px) scale(0.99); }
+    60%  { transform: translateY(-1px) scale(1.01); }
+    80%  { transform: translateY(0.5px) scale(0.99); }
+    100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes shimmerTag {
+    0%   { box-shadow: 0 0 0 0 rgba(255, 179, 0, 0.10); }
+    50%  { box-shadow: 0 0 8px 2px rgba(255, 179, 0, 0.13); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 179, 0, 0.10); }
+}
+
+/* Staggered animation delays for more natural effect */
+#chatbot-filter-tags .chatbot-filter-tag:nth-child(1)  { animation-delay: 0s, 0s; }
+#chatbot-filter-tags .chatbot-filter-tag:nth-child(2)  { animation-delay: 0.6s, 0.4s; }
+#chatbot-filter-tags .chatbot-filter-tag:nth-child(3)  { animation-delay: 1.2s, 0.8s; }
+#chatbot-filter-tags .chatbot-filter-tag:nth-child(4)  { animation-delay: 1.8s, 1.2s; }
+#chatbot-filter-tags .chatbot-filter-tag:nth-child(5)  { animation-delay: 2.4s, 1.6s; }
+#chatbot-filter-tags .chatbot-filter-tag:nth-child(6)  { animation-delay: 3.0s, 2.0s; }
+#chatbot-filter-tags .chatbot-filter-tag:nth-child(7)  { animation-delay: 3.6s, 2.4s; }
+#chatbot-filter-tags .chatbot-filter-tag:nth-child(8)  { animation-delay: 4.2s, 2.8s; }
+#chatbot-filter-tags .chatbot-filter-tag:nth-child(9)  { animation-delay: 4.8s, 3.2s; }
+#chatbot-filter-tags .chatbot-filter-tag:nth-child(10) { animation-delay: 5.4s, 3.6s; }
 
 #chatbot-toolbar {
     display: none !important;
@@ -555,12 +584,11 @@ body {
 
 .chatbot-office-image, .chatbot-experience-image {
     width: 100%;
-    max-width: 320px;
     max-height: 160px;
     object-fit: cover;
     display: block;
     margin: 0 auto 0.75em;
-    border-radius: 12px 12px 0 0;
+    border-radius: 10px 10px 0 0;
 }
 
 .chatbot-office-title, .chatbot-experience-title {
@@ -593,7 +621,6 @@ body {
 
 .chatbot-option-btn {
     width: 100%;
-    /* ...existing button styles... */
 }
 
 .chatbot-office-card hr, .chatbot-experience-card hr {
@@ -604,7 +631,7 @@ body {
 /* Responsive styles */
 @media (max-width: 900px) {
     #chatbot-header {
-        font: 700 1.1rem 'Poppins', sans-serif;
+        font: 700 0.95rem 'Poppins', sans-serif;
         padding: 0.875rem 1.25rem;
     }
     .chatbot-bubble {
@@ -628,7 +655,7 @@ body {
         font-size: 18px;
     }
     #chatbot-header {
-        font: 700 1rem 'Poppins', sans-serif;
+        font: 700 0.9rem 'Poppins', sans-serif;
         padding: 0.75rem 1rem;
         letter-spacing: 0.25px;
     }
@@ -675,7 +702,7 @@ body {
         font-size: 17px;
     }
     #chatbot-header {
-        font: 700 0.9rem 'Poppins', sans-serif;
+        font: 700 0.85rem 'Poppins', sans-serif;
         padding: 0.625rem 0.75rem;
     }
     #chatbot-messages {
