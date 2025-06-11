@@ -539,47 +539,135 @@ function updatePersistentToolbar(topic) {
     btnBack.style.display = showBack ? '' : 'none';
     btnNext.style.display = showNext ? '' : 'none';
 
-    // Remove any previous text label
-    btnBack.querySelector('.chatbot-btn-label')?.remove();
-    btnNext.querySelector('.chatbot-btn-label')?.remove();
+    // Remove any previous text label and icons
+    btnBack.innerHTML = '';
+    btnNext.innerHTML = '';
 
-    // If only one nav button is visible, add text label
-    if (showBack && !showNext) {
-        // Only Back is visible
+    // --- Dynamic Next/Skip label logic ---
+    const selections = filterSelections[topic.key] || [];
+    const nextLabel = selections.length === 0 ? 'Skip' : 'Next';
+
+    // Helper to create label+icon span (arrow after or before text)
+    function makeBtnContent(labelText, iconClass, arrowAfter = true) {
         const label = document.createElement('span');
         label.className = 'chatbot-btn-label';
-        label.textContent = 'Back';
-        btnBack.appendChild(label);
-    } else if (!showBack && showNext) {
-        // Only Next is visible
-        const label = document.createElement('span');
-        label.className = 'chatbot-btn-label';
-        label.textContent = 'Next';
-        btnNext.appendChild(label);
+        label.textContent = labelText;
+        const icon = document.createElement('i');
+        icon.className = `ri-${iconClass}`;
+        icon.setAttribute('aria-hidden', 'true');
+        const wrapper = document.createElement('span');
+        wrapper.style.display = 'inline-flex';
+        wrapper.style.alignItems = 'center';
+        if (arrowAfter) {
+            label.style.marginRight = '0.5em';
+            wrapper.appendChild(label);
+            wrapper.appendChild(icon);
+        } else {
+            icon.style.marginRight = '0.5em';
+            wrapper.appendChild(icon);
+            wrapper.appendChild(label);
+        }
+        return wrapper;
     }
-    // If both are visible, just show icons (no label)
+
+    // Always add the content, but set up the click handlers after
+    if (showBack && !showNext) {
+        btnBack.appendChild(makeBtnContent('Back', 'arrow-left-line', false)); // ARROW TEXT
+    } else if (!showBack && showNext) {
+        btnNext.appendChild(makeBtnContent(nextLabel, 'arrow-right-line', true)); // TEXT ARROW
+    } else if (showNext) {
+        btnBack.appendChild(makeBtnContent('Back', 'arrow-left-line', false)); // ARROW TEXT
+        btnNext.appendChild(makeBtnContent(nextLabel, 'arrow-right-line', true)); // TEXT ARROW
+    }
+
+    // Remove previous click handlers to avoid stacking
+    btnBack.onclick = null;
+    btnNext.onclick = null;
 
     btnBack.onclick = () => {
-        // Remove the last two messages (the question and the user's previous selection)
-        const msgArea = document.getElementById('chatbot-messages');
-        if (msgArea && msgArea.lastElementChild) {
-            msgArea.removeChild(msgArea.lastElementChild);
-        }
-        if (msgArea && msgArea.lastElementChild) {
-            msgArea.removeChild(msgArea.lastElementChild);
-        }
-        filterTopicIndex--;
-        // Re-ask the previous filter topic (the message and options)
-        const prevTopic = filterTopics[filterTopicIndex];
-        addMessage(prevTopic.label, "bot", () => {
-            renderFilterScreen(prevTopic);
-        });
+        showLoadingOverlay();
+        setTimeout(() => {
+            // ...existing code for back...
+            const msgArea = document.getElementById('chatbot-messages');
+            if (msgArea) {
+                filterTopicIndex--;
+                const prevTopic = filterTopics[filterTopicIndex];
+                while (msgArea.lastElementChild) {
+                    const last = msgArea.lastElementChild;
+                    const isBotMsg = last.classList.contains('bot');
+                    if (isBotMsg && last.querySelector('.chatbot-bubble')?.textContent === prevTopic.label) {
+                        break;
+                    }
+                    msgArea.removeChild(last);
+                }
+                if (msgArea.lastElementChild && msgArea.lastElementChild.classList.contains('bot') &&
+                    msgArea.lastElementChild.querySelector('.chatbot-bubble')?.textContent === prevTopic.label) {
+                    msgArea.removeChild(msgArea.lastElementChild);
+                }
+                addMessage(prevTopic.label, "bot", () => {
+                    renderFilterScreen(prevTopic);
+                    hideLoadingOverlay();
+                });
+            } else {
+                hideLoadingOverlay();
+            }
+        }, 500);
     };
 
     btnNext.onclick = () => {
-        filterTopicIndex++;
-        chatbotAskFilterTopic();
+        showLoadingOverlay();
+        setTimeout(() => {
+            const topic = filterTopics[filterTopicIndex];
+            const selections = filterSelections[topic.key] || [];
+            if (selections.length > 0) {
+                selections.forEach(sel => {
+                    const opt = topic.options.find(o => o.value === sel);
+                    addMessage(opt ? opt.label : sel, "user");
+                });
+            }
+            filterTopicIndex++;
+            addMessage(filterTopics[filterTopicIndex]?.label, "bot", () => {
+                renderFilterScreen(filterTopics[filterTopicIndex]);
+                hideLoadingOverlay();
+            });
+        }, 500);
     };
+
+    // --- Update next/skip label live when selections change ---
+    const optArea = document.getElementById('chatbot-options');
+    if (optArea && btnNext) {
+        // Remove any previous event listener to avoid stacking
+        if (btnNext._labelUpdater) {
+            optArea.removeEventListener('click', btnNext._labelUpdater);
+        }
+        btnNext._labelUpdater = function () {
+            setTimeout(() => {
+                const selections = filterSelections[topic.key] || [];
+                btnNext.innerHTML = '';
+                btnNext.appendChild(makeBtnContent(selections.length === 0 ? 'Skip' : 'Next', 'arrow-right-line', true));
+                // Re-attach the click handler after updating innerHTML
+                btnNext.onclick = () => {
+                    showLoadingOverlay();
+                    setTimeout(() => {
+                        const topic = filterTopics[filterTopicIndex];
+                        const selections = filterSelections[topic.key] || [];
+                        if (selections.length > 0) {
+                            selections.forEach(sel => {
+                                const opt = topic.options.find(o => o.value === sel);
+                                addMessage(opt ? opt.label : sel, "user");
+                            });
+                        }
+                        filterTopicIndex++;
+                        addMessage(filterTopics[filterTopicIndex]?.label, "bot", () => {
+                            renderFilterScreen(filterTopics[filterTopicIndex]);
+                            hideLoadingOverlay();
+                        });
+                    }, 500);
+                };
+            }, 10);
+        };
+        optArea.addEventListener('click', btnNext._labelUpdater);
+    }
 
     const btnResults = document.getElementById('chatbot-toolbar-results');
     btnResults.style.display = filterTopicIndex === filterTopics.length - 1 ? '' : 'none';
@@ -588,7 +676,16 @@ function updatePersistentToolbar(topic) {
         chatbotShowResults(chatbotState.filters);
     };
 
+    // Add or remove the rainbow fill class for the "show results" button
+    if (filterTopicIndex === filterTopics.length - 1) {
+        btnResults.classList.add('rainbow-border');
+    } else {
+        btnResults.classList.remove('rainbow-border');
+    }
+
+    // Hide the restart button on the last step (when results button is shown)
     const btnStartOver = document.getElementById('chatbot-toolbar-startover');
+    btnStartOver.style.display = filterTopicIndex === filterTopics.length - 1 ? 'none' : '';
     btnStartOver.onclick = chatbotStart;
 }
 
@@ -712,6 +809,47 @@ function chatbotShowOffices() {
         }
         showOffice(0);
     });
+}
+
+// Add a loading overlay inside the options container if not present
+function ensureLoadingOverlay() {
+    const optionsDrawer = document.getElementById('chatbot-options-drawer');
+    if (!optionsDrawer) return;
+    if (!document.getElementById('chatbot-loading-overlay')) {
+        const overlay = document.createElement('div');
+        overlay.id = 'chatbot-loading-overlay';
+        overlay.style.position = 'absolute';
+        overlay.style.top = '0';
+        overlay.style.left = '0';
+        overlay.style.width = '100%';
+        overlay.style.height = '100%';
+        overlay.style.background = 'transparent';
+        overlay.style.backdropFilter = 'blur(20px)';
+        overlay.style.display = 'none';
+        overlay.style.zIndex = '999';
+        overlay.style.pointerEvents = 'all';
+        overlay.style.justifyContent = 'center';
+        overlay.style.alignItems = 'center';
+        overlay.style.display = 'none';
+        overlay.style.transition = 'opacity 0.25s';
+        overlay.innerHTML = `<div style="font-size:2rem;color:#00695c;display:flex;align-items:center;gap:0.7em;">
+            <span class="ri-loader-4-line" style="animation:spin 1s linear infinite;"></span>
+        </div>
+        <style>
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        </style>`;
+        optionsDrawer.style.position = 'relative';
+        optionsDrawer.appendChild(overlay);
+    }
+}
+function showLoadingOverlay() {
+    ensureLoadingOverlay();
+    const overlay = document.getElementById('chatbot-loading-overlay');
+    if (overlay) overlay.style.display = 'flex';
+}
+function hideLoadingOverlay() {
+    const overlay = document.getElementById('chatbot-loading-overlay');
+    if (overlay) overlay.style.display = 'none';
 }
 
 // Start chatbot on page load

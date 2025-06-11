@@ -468,7 +468,7 @@ body {
 #chatbot-toolbar .toolbar-main-group {
     display: flex;
     flex-direction: row;
-    gap: 0.5rem;
+    gap: 0.25rem;
     align-items: center;
 }
 
@@ -485,8 +485,8 @@ body {
 }
 
 #chatbot-toolbar .chatbot-option-btn {
-    font-size: 0.95rem !important;
-    padding: 0.5rem 1.5rem;
+    font-size: 0.9rem !important;
+    padding: 0rem 1rem;
     border-radius: 100vmin !important;
     height: auto;
     min-height: 2.5rem;
@@ -507,6 +507,45 @@ body {
     border: var(--glass-border);
 }
 
+/* Remove all the rainbow styling and replace with pulsating effect */
+#chatbot-toolbar-results.rainbow-border {
+    background: var(--glass-tint-ocean);
+    color: var(--ocean-deep);
+    border: var(--glass-border);
+    border-radius: 100vmin;
+    font: 600 1.1rem 'Poppins', sans-serif;
+    padding: 0.75em 2.2em 0.75em 2.2em;
+    position: relative;
+    backdrop-filter: var(--glass-blur-medium);
+    box-shadow: 0 0 0 0 rgba(255, 143, 0, 0.4);
+    animation: pulse-attention 2s infinite;
+}
+
+@keyframes pulse-attention {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 143, 0, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 143, 0, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 143, 0, 0);
+    }
+}
+
+/* Remove all the conflicting styles */
+#chatbot-toolbar-results.rainbow-border::before,
+#chatbot-toolbar-results.rainbow-border::after {
+    display: none !important;
+}
+
+/* Normal text color */
+#chatbot-toolbar-results.rainbow-border .chatbot-btn-label,
+#chatbot-toolbar-results.rainbow-border i {
+    color: var(--ocean-deep) !important;
+    font-weight: 600;
+}
+
 /* Responsive styles */
 @media (max-width: 900px) {
     #chatbot-header {
@@ -519,7 +558,7 @@ body {
         padding: 1rem 1.5rem;
     }
     .chatbot-option-btn {
-        font: 600 0.95rem 'Poppins', sans-serif;
+        font: 600 0.9rem 'Poppins', sans-serif;
         padding: 0.75rem 1.5rem;
         min-height: 2.75rem;
     }
@@ -581,14 +620,14 @@ body {
         font-size: 17px;
     }
     #chatbot-header {
-        font: 700 0.95rem 'Poppins', sans-serif;
+        font: 700 0.9rem 'Poppins', sans-serif;
         padding: 0.625rem 0.75rem;
     }
     #chatbot-messages {
         padding: 1rem 0.75rem;
     }
     .chatbot-bubble {
-        font: 0.95rem/1.4 'Poppins', sans-serif;
+        font: 0.9rem/1.4 'Poppins', sans-serif;
         padding: 0.875rem 1rem;
         border-radius: 20px;
     }
