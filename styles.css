@@ -244,6 +244,8 @@ body {
     opacity: 1;
     position: relative;
     z-index: 2;
+    width: 100%;
+    column-gap: 1.5rem;
 }
 
 #chatbot-options > .chatbot-option-btn:first-child:last-child {
@@ -283,6 +285,11 @@ body {
     animation: bubbleFloat 0.6s var(--fluid-ease) forwards;
     animation-delay: 0.1s;
     overflow: hidden;
+    max-width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .chatbot-option-btn::before {
@@ -798,12 +805,18 @@ body {
         margin: 0 auto;
         border-radius: 0 0 32px 32px;
         font-size: 1.08rem;
+        column-gap: 1.5rem;
     }
     .chatbot-option-btn {
         font-size: 1.08rem;
         min-height: 3.25rem;
         padding: 1.1rem 1.5rem 1.1rem 3.5rem;
         border-radius: 100vmin;
+        max-width: 320px;
+        margin-left: auto;
+        margin-right: auto;
+        width: 100%;
+        box-sizing: border-box;
     }
     .chatbot-btn-icon-circle {
         width: 2.75rem;
