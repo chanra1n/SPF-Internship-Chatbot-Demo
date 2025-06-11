@@ -298,8 +298,14 @@ function setOptions(options) {
             labelSpan.textContent = opt.label;
             btn.appendChild(labelSpan);
             btn.onclick = () => {
+                // Only lock UI if the option is NOT a "Show More" or similar "load more" button
                 if (chatbotUILocked) return;
-                lockChatbotUI();
+                // Detect "Show More" or similar by label or a property
+                const isShowMore = typeof opt.label === "string" && (
+                    opt.label.toLowerCase().includes("show more") ||
+                    opt.label.toLowerCase().includes("load more")
+                );
+                if (!isShowMore) lockChatbotUI();
                 opt.onClick();
             };
             btn.style.animationDelay = (0.08 * idx) + 's';
@@ -339,7 +345,11 @@ function setOptions(options) {
             btn.appendChild(labelSpan);
             btn.onclick = () => {
                 if (chatbotUILocked) return;
-                lockChatbotUI();
+                const isShowMore = typeof opt.label === "string" && (
+                    opt.label.toLowerCase().includes("show more") ||
+                    opt.label.toLowerCase().includes("load more")
+                );
+                if (!isShowMore) lockChatbotUI();
                 opt.onClick();
             };
             btn.style.animationDelay = (0.08 * idx) + 's';
@@ -1002,6 +1012,8 @@ function showOfficesResultsList(list, startIdx, userTags) {
                 }
             }
         ]);
+        // Always unlock UI after rendering "Show More" options
+        unlockChatbotUI();
     } else {
         setOptions([
             { label: "Search Again", icon: "search-line", onClick: () => {
@@ -1012,6 +1024,8 @@ function showOfficesResultsList(list, startIdx, userTags) {
                 window.open("https://humboldt.edu/internships", "_blank");
             }}
         ]);
+        // Unlock UI for these options as well
+        unlockChatbotUI();
     }
 }
 
