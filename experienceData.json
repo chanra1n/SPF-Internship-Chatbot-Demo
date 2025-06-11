@@ -1,0 +1,126 @@
+{
+    "experiences": [
+        {
+            "name": "Academic Internship",
+            "image": "",
+            "description": "Internships connected to a course; students get projects with faculty help and receive course credit. Typically not paid. The Center for Community Based Learning facilitates academic internships.",
+            "link": "https://ccbl.humboldt.edu/academic-internships",
+            "tags": ["course credit", "faculty help", "not always paid", "reflection", "off-campus", "academic", "internship"]
+        },
+        {
+            "name": "Service Learning",
+            "image": "",
+            "description": "Academic internship focused on providing a service to an external organization. Facilitated by the Center for Community Based Learning.",
+            "link": "https://ccbl.humboldt.edu/service-learning",
+            "tags": ["service", "course credit", "reflection", "off-campus", "community", "maybe paid"]
+        },
+        {
+            "name": "Clinical Placement",
+            "image": "",
+            "description": "Internship in a clinical setting for professional experience. Common for social work majors. Facilitated by the Center for Community Based Learning.",
+            "link": "https://ccbl.humboldt.edu/clinical-placements",
+            "tags": ["clinical", "professional", "course credit", "required", "reflection", "off-campus"]
+        },
+        {
+            "name": "Practicum",
+            "image": "",
+            "description": "Internship in a professional setting for experience. Common for psychology majors. Facilitated by the Center for Community Based Learning.",
+            "link": "https://ccbl.humboldt.edu/practicums",
+            "tags": ["practicum", "professional", "course credit", "required", "reflection", "off-campus"]
+        },
+        {
+            "name": "Research Internship",
+            "image": "",
+            "description": "Opportunities with faculty, research labs, or agencies to generate new knowledge. Usually paid, especially off-campus. Advertised via Sponsored Programs Foundation, departments, or faculty.",
+            "link": "https://research.humboldt.edu/internships",
+            "tags": ["research", "faculty", "paid", "off-campus", "summer", "academic year"]
+        },
+        {
+            "name": "Paid Academic Year Internship",
+            "image": "",
+            "description": "Internships offered by companies during the academic year. Students are hired directly. Advertised by the Career Development Center and departments.",
+            "link": "https://cdc.humboldt.edu/academic-year-internships",
+            "tags": ["paid", "company", "academic year", "off-campus", "career", "internship"]
+        },
+        {
+            "name": "Paid Summer Internship",
+            "image": "",
+            "description": "Internships offered by companies during the summer. Students are hired directly. Advertised by the Career Development Center and departments.",
+            "link": "https://cdc.humboldt.edu/summer-internships",
+            "tags": ["paid", "company", "summer", "off-campus", "career", "internship"]
+        },
+        {
+            "name": "Job Shadowing",
+            "image": "",
+            "description": "Observe professionals in their work environment to learn about careers. Not paid. May be arranged through departments or Career Center.",
+            "link": "https://career.humboldt.edu/job-shadowing",
+            "tags": ["shadowing", "not paid", "career", "off-campus", "exploration"]
+        }
+    ],
+    "offices": [
+        {
+            "name": "Career Development Center",
+            "description": "The Career Development Center advertises paid jobs, internships, and fellowships through Handshake. They host career fairs and offer resume and job application help.",
+            "link": "https://cdc.humboldt.edu/",
+            "image": "",
+            "tags": ["paid", "career", "Handshake"]
+        },
+        {
+            "name": "Center for Community Based Learning (CCBL)",
+            "description": "CCBL supports course-based, hands-on learning: internships, practicums, and service learning. They help with course design, S4 reporting, and community connections.",
+            "link": "https://ccbl.humboldt.edu/",
+            "image": "",
+            "tags": ["internship", "service learning", "practicum"]
+        },
+        {
+            "name": "Youth Educational Services (YES)",
+            "description": "YES offers volunteer opportunities, events, and leadership roles. Time commitment varies by program.",
+            "link": "https://humboldt.edu/yes",
+            "image": "",
+            "tags": ["volunteer", "leadership", "community"]
+        },
+        {
+            "name": "College Corps",
+            "description": "College Corps is a service fellowship: $10,000 for 450 hours of service in education, climate, or food insecurity. Hours may count for other requirements.",
+            "link": "https://humboldt.edu/college-corps",
+            "image": "",
+            "tags": ["service", "fellowship", "paid"]
+        },
+        {
+            "name": "SPF Engagement Hub",
+            "description": "SPF Engagement Hub lists externally funded fellowships, research, and paid internships for students and faculty. Opportunities change dynamically.",
+            "link": "https://humboldt.edu/spf-engagement-hub",
+            "image": "",
+            "tags": ["fellowship", "research", "paid"]
+        },
+        {
+            "name": "Library",
+            "description": "The Library offers paid, on-campus internships involving research and scholarship, available year-round.",
+            "link": "https://library.humboldt.edu/",
+            "image": "",
+            "tags": ["paid", "research", "on-campus"]
+        }
+    ],
+
+    "majors": [
+        "Biology",
+        "Business",
+        "Psychology",
+        "Social Work",
+        "Education",
+        "Engineering",
+        "Art",
+        "Other"
+    ],
+    
+    "departmentAttributes": {
+        "Biology": ["research", "faculty help", "career-relevant skills"],
+        "Business": ["paid", "career-relevant skills"],
+        "Psychology": ["practicum", "required", "faculty help"],
+        "Social Work": ["clinical", "required", "faculty help"],
+        "Education": ["required", "off-campus", "faculty help"],
+        "Engineering": ["paid", "internship", "career-relevant skills"],
+        "Art": ["internship", "faculty help"],
+        "Other": []
+    }
+}
