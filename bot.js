@@ -187,20 +187,6 @@
         if (!document.getElementById('chatbot-filter-tag-style')) {
             const style = document.createElement('style');
             style.id = 'chatbot-filter-tag-style';
-            style.innerHTML = `
-                .chatbot-filter-tag {
-                    background: rgba(0,99,65,0.09);
-                    color: #006341;
-                    border-radius: 100vmin;
-                    padding: 0.25em 1em;
-                    font-size: 0.95em;
-                    font-weight: 500;
-                    margin: 0 0.1em;
-                    border: 1px solid #e3f1e6;
-                    display: inline-block;
-                    white-space: nowrap;
-                }
-            `;
             document.head.appendChild(style);
         }
 
@@ -574,8 +560,20 @@ function updatePersistentToolbar(topic) {
     // If both are visible, just show icons (no label)
 
     btnBack.onclick = () => {
+        // Remove the last two messages (the question and the user's previous selection)
+        const msgArea = document.getElementById('chatbot-messages');
+        if (msgArea && msgArea.lastElementChild) {
+            msgArea.removeChild(msgArea.lastElementChild);
+        }
+        if (msgArea && msgArea.lastElementChild) {
+            msgArea.removeChild(msgArea.lastElementChild);
+        }
         filterTopicIndex--;
-        chatbotAskFilterTopic();
+        // Re-ask the previous filter topic (the message and options)
+        const prevTopic = filterTopics[filterTopicIndex];
+        addMessage(prevTopic.label, "bot", () => {
+            renderFilterScreen(prevTopic);
+        });
     };
 
     btnNext.onclick = () => {
@@ -667,7 +665,13 @@ function chatbotShowResults(filters) {
             );
         } else {
             addMessage("No matches found. Try different filters.", "bot", () => {
-                setOptions([{ label: "Restart", onClick: chatbotStart }]);
+                setOptions([
+                    { label: "Try Different Filters", icon: "filter-line", onClick: () => {
+                        filterTopicIndex = 0;
+                        filterSelections = {};
+                        chatbotAskFilterTopic();
+                    }}
+                ]);
             });
         }
         return;
@@ -697,7 +701,13 @@ function chatbotShowOffices() {
                 const tagStr = offices[i].tags.map(t => `#${t}`).join(' ');
                 addMessage(`${offices[i].name}: ${offices[i].info}\n${tagStr}`, "bot", () => showOffice(i + 1));
             } else {
-                setOptions([{ label: "Restart", onClick: chatbotStart }]);
+                setOptions([
+                    { label: "Search Again", icon: "search-line", onClick: () => {
+                        filterTopicIndex = 0;
+                        filterSelections = {};
+                        chatbotAskFilterTopic();
+                    }}
+                ]);
             }
         }
         showOffice(0);
