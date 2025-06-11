@@ -667,7 +667,7 @@ function chatbotShowResults(filters) {
             );
         } else {
             addMessage("No matches found. Try different filters.", "bot", () => {
-                setOptions([{ label: "Restart", icon: "refresh-line", onClick: chatbotStart }]);
+                setOptions([{ label: "Restart", onClick: chatbotStart }]);
             });
         }
         return;
@@ -697,7 +697,7 @@ function chatbotShowOffices() {
                 const tagStr = offices[i].tags.map(t => `#${t}`).join(' ');
                 addMessage(`${offices[i].name}: ${offices[i].info}\n${tagStr}`, "bot", () => showOffice(i + 1));
             } else {
-                setOptions([{ label: "Restart", icon: "refresh-line", onClick: chatbotStart }]);
+                setOptions([{ label: "Restart", onClick: chatbotStart }]);
             }
         }
         showOffice(0);
