@@ -151,12 +151,15 @@ function queueMessage(text, sender = "bot", cb) {
 
 function processMessageQueue() {
     if (isMessageProcessing || messageQueue.length === 0) return;
+    lockChatbotUI();
     isMessageProcessing = true;
     const { text, sender, cb } = messageQueue.shift();
     addMessageImmediate(text, sender, () => {
         if (cb) cb();
         setTimeout(() => {
             isMessageProcessing = false;
+            // Only unlock UI if queue is empty (prevents double-unlock)
+            if (messageQueue.length === 0) unlockChatbotUI();
             processMessageQueue();
         }, MESSAGE_DELAY);
     });
@@ -294,7 +297,11 @@ function setOptions(options) {
             labelSpan.className = 'chatbot-btn-label';
             labelSpan.textContent = opt.label;
             btn.appendChild(labelSpan);
-            btn.onclick = () => opt.onClick();
+            btn.onclick = () => {
+                if (chatbotUILocked) return;
+                lockChatbotUI();
+                opt.onClick();
+            };
             btn.style.animationDelay = (0.08 * idx) + 's';
             optArea.appendChild(btn);
             void btn.offsetWidth;
@@ -330,7 +337,11 @@ function setOptions(options) {
             labelSpan.className = 'chatbot-btn-label';
             labelSpan.textContent = opt.label;
             btn.appendChild(labelSpan);
-            btn.onclick = () => opt.onClick();
+            btn.onclick = () => {
+                if (chatbotUILocked) return;
+                lockChatbotUI();
+                opt.onClick();
+            };
             btn.style.animationDelay = (0.08 * idx) + 's';
             void btn.offsetWidth;
             btn.style.opacity = '';
@@ -641,6 +652,8 @@ function updatePersistentToolbar(topic) {
     btnNext.onclick = null;
 
     btnBack.onclick = () => {
+        if (chatbotUILocked) return;
+        lockChatbotUI();
         showLoadingOverlay();
         setTimeout(() => {
             const msgArea = document.getElementById('chatbot-messages');
@@ -671,6 +684,8 @@ function updatePersistentToolbar(topic) {
     };
 
     btnNext.onclick = () => {
+        if (chatbotUILocked) return;
+        lockChatbotUI();
         showLoadingOverlay();
         setTimeout(() => {
             const topic = filterTopics[filterTopicIndex];
@@ -704,6 +719,8 @@ function updatePersistentToolbar(topic) {
                 btnNext.innerHTML = '';
                 btnNext.appendChild(makeBtnContent(selections.length === 0 ? 'Skip' : 'Next', 'arrow-right-line', true));
                 btnNext.onclick = () => {
+                    if (chatbotUILocked) return;
+                    lockChatbotUI();
                     showLoadingOverlay();
                     setTimeout(() => {
                         const topic = filterTopics[filterTopicIndex];
@@ -746,7 +763,11 @@ function updatePersistentToolbar(topic) {
     // Hide the restart button on the last step (when results button is shown)
     const btnStartOver = document.getElementById('chatbot-toolbar-startover');
     btnStartOver.style.display = filterTopicIndex === filterTopics.length - 1 ? 'none' : '';
-    btnStartOver.onclick = chatbotStart;
+    btnStartOver.onclick = () => {
+        if (chatbotUILocked) return;
+        lockChatbotUI();
+        chatbotStart();
+    };
 }
 
 function chatbotShowResults(filters) {
@@ -1105,4 +1126,47 @@ function showInfoModal(title, body) {
     modal.querySelector('#chatbot-info-modal-title').textContent = title;
     modal.querySelector('#chatbot-info-modal-body').textContent = body;
     modal.style.display = 'flex';
+}
+
+// --- Lock/unlock UI during message queue processing ---
+let chatbotUILocked = false;
+
+function lockChatbotUI() {
+    chatbotUILocked = true;
+    // Disable all option buttons
+    const optArea = document.getElementById('chatbot-options');
+    if (optArea) {
+        Array.from(optArea.querySelectorAll('button')).forEach(btn => {
+            btn.disabled = true;
+            btn.classList.add('chatbot-btn-locked');
+        });
+    }
+    // Disable toolbar buttons
+    const toolbar = document.getElementById('chatbot-toolbar');
+    if (toolbar) {
+        Array.from(toolbar.querySelectorAll('button')).forEach(btn => {
+            btn.disabled = true;
+            btn.classList.add('chatbot-btn-locked');
+        });
+    }
+}
+
+function unlockChatbotUI() {
+    chatbotUILocked = false;
+    // Enable all option buttons
+    const optArea = document.getElementById('chatbot-options');
+    if (optArea) {
+        Array.from(optArea.querySelectorAll('button')).forEach(btn => {
+            btn.disabled = false;
+            btn.classList.remove('chatbot-btn-locked');
+        });
+    }
+    // Enable toolbar buttons
+    const toolbar = document.getElementById('chatbot-toolbar');
+    if (toolbar) {
+        Array.from(toolbar.querySelectorAll('button')).forEach(btn => {
+            btn.disabled = false;
+            btn.classList.remove('chatbot-btn-locked');
+        });
+    }
 }
