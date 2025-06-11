@@ -773,6 +773,10 @@ function chatbotShowResults(filters) {
 }
 
 function showExperienceResultsList(list, startIdx) {
+    // Hide filter tags when showing final results
+    const tagArea = document.getElementById('chatbot-filter-tags');
+    if (tagArea) tagArea.style.display = "none";
+
     // Only show the "Based on your interests..." message ONCE, then show all results as a single message.
     if (!list || list.length === 0) {
         chatbotShowOffices();
