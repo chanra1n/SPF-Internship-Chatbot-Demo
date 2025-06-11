@@ -885,6 +885,9 @@ function showOfficesResultsList(list, startIdx, userTags) {
                 filterTopicIndex = 0;
                 filterSelections = {};
                 chatbotAskFilterTopic();
+            }},
+            { label: "Internship Hub", icon: "external-link-line", onClick: () => {
+                window.open("https://humboldt.edu/internships", "_blank");
             }}
         ]);
     }
