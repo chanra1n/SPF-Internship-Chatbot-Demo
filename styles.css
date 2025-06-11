@@ -184,6 +184,7 @@ body {
     padding-left: 0.4rem;
     padding-right: 0.4rem;
     position: relative;
+    margin-right: 0.25rem;
 }
 
 .chatbot-term-info {
@@ -622,7 +623,7 @@ body {
 }
 
 .chatbot-office-tags, .chatbot-experience-tags {
-    margin: 0.5em 0 0 0;
+    margin: 0.75em 0 0.25em 0;
     display: flex;
     flex-wrap: wrap;
     gap: 0.5em;
@@ -751,6 +752,97 @@ body {
         font: 600 0.9rem 'Poppins', sans-serif;
         padding: 0.625rem 0.875rem;
         min-height: 2.75rem;
+    }
+}
+
+/* --- Desktop Enhancements --- */
+@media (min-width: 1000px) {
+    #chatbot-container {
+        max-width: 700px;
+        max-height: 90vh;
+        margin: 2.5vh auto;
+        border-radius: 32px;
+        box-shadow: 0 12px 48px 0 rgba(0,77,64,0.18), 0 2px 8px 0 rgba(0,0,0,0.08);
+        border: var(--glass-border-strong);
+        overflow: hidden;
+    }
+    #chatbot-header {
+        font-size: 1.25rem;
+        padding: 1.5rem 2.5rem;
+        border-radius: 32px 32px 0 0;
+    }
+    #chatbot-messages {
+        padding: 2.5rem 2.5rem 2.5rem 2.5rem;
+        max-height: 55vh;
+        min-height: 300px;
+        font-size: 1.15rem;
+    }
+    .chatbot-bubble {
+        font-size: 1.15rem;
+        max-width: 540px;
+        padding: 1.5rem 2.25rem;
+        border-radius: 24px;
+    }
+    .chatbot-bubble.bot {
+        border-radius: 24px 24px 24px 0px;
+    }
+    .chatbot-bubble.user {
+        border-radius: 24px 24px 0px 24px;
+    }
+    #chatbot-options {
+        padding: 2.5rem 2.5rem 2.5rem 2.5rem;
+        grid-template-columns: 1fr 1fr;
+        max-width: 700px;
+        margin: 0 auto;
+        border-radius: 0 0 32px 32px;
+        font-size: 1.08rem;
+    }
+    .chatbot-option-btn {
+        font-size: 1.08rem;
+        min-height: 3.25rem;
+        padding: 1.1rem 1.5rem 1.1rem 3.5rem;
+        border-radius: 100vmin;
+    }
+    .chatbot-btn-icon-circle {
+        width: 2.75rem;
+        height: 2.75rem;
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        font-size: 1.5rem;
+    }
+    #chatbot-filter-tags {
+        font-size: 1rem;
+        min-height: 3.2rem;
+        padding: 0.5rem 1.5rem;
+    }
+    .chatbot-filter-tag {
+        font-size: 0.92rem;
+        padding: 0.18rem 0.8rem;
+    }
+    .chatbot-office-card, .chatbot-experience-card {
+        border-radius: 18px;
+        box-shadow: 0 4px 24px 0 rgba(0,77,64,0.08);
+        margin-bottom: 1.5rem;
+    }
+    .chatbot-office-image, .chatbot-experience-image {
+        max-height: 200px;
+        border-radius: 18px 18px 0 0;
+    }
+    .chatbot-office-title, .chatbot-experience-title {
+        font-size: 1.35em;
+    }
+    .chatbot-office-tags, .chatbot-experience-tags {
+        font-size: 1rem;
+    }
+    .chatbot-office-tag, .chatbot-experience-tag {
+        font-size: 0.92rem;
+        padding: 0.18rem 1.2rem;
+    }
+    #chatbot-info-modal > div {
+        max-width: 480px;
+        min-width: 340px;
+        font-size: 1.12em;
+        padding: 2.2em 2.5em 2em 2.5em;
     }
 }
 

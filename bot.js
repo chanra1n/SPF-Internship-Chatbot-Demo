@@ -337,7 +337,7 @@ const filterTopics = [
         options: [
             { label: "Internships", icon: "briefcase-line", value: "internship" },
             { label: "Research", icon: "flask-line", value: "research" },
-            { label: "Service Learning", icon: "heart-line", value: "service learning" },
+            { label: "Service Learning", icon: "service-line", value: "service learning" },
             { label: "Job Shadowing", icon: "eye-line", value: "shadowing" }
         ]
     },
@@ -353,7 +353,7 @@ const filterTopics = [
         key: "location",
         label: "Where would you prefer your experience take place?",
         options: [
-            { label: "On Campus", icon: "home-2-line", value: "on-campus" },
+            { label: "On Campus", icon: "hotel-line", value: "on-campus" },
             { label: "Off Campus", icon: "road-map-line", value: "off-campus" }
         ]
     },
@@ -369,7 +369,7 @@ const filterTopics = [
         key: "credit",
         label: "Are you interested in potentially earning course credit?",
         options: [
-            { label: "Course Credit", icon: "award-line", value: "course credit" }
+            { label: "Course Credit", icon: "graduation-cap-line", value: "course credit" }
         ]
     }
 ];
@@ -786,24 +786,27 @@ function showExperienceResultsList(list, startIdx) {
 
     let message = "";
 
-    function pluralizeBolded(nameHtml, suffix = "s") {
-        return nameHtml.replace(/(<b>)(.*?)(<\/b>)/i, (_, open, inner, close) => `${open}${inner}${suffix}${close}`);
+    // Pluralization rules
+    function pluralizeExperience(name, expName) {
+        expName = expName.toLowerCase();
+        if (expName === "research" || expName === "service learning") {
+            // No pluralization
+            return name;
+        }
+        if (expName === "practicum") {
+            // Plural is "practica"
+            return name.replace(/(<b>)(.*?)(<\/b>)/i, (_, open, inner, close) => `${open}practica${close}`);
+        }
+        // Default: add "s"
+        return name.replace(/(<b>)(.*?)(<\/b>)/i, (_, open, inner, close) => `${open}${inner}s${close}`);
     }
 
     if (names.length === 1) {
-        message = `Based on your responses, you might be interested in ${pluralizeBolded(names[0], "s.")}`;
+        message = `Based on your responses, you might be interested in ${pluralizeExperience(names[0], list[0].name)}.`;
     } else if (names.length === 2) {
-        message = `Based on your responses, you might be interested in ${pluralizeBolded(names[0], "s,")} or ${pluralizeBolded(names[1], "s.")}`;
+        message = `Based on your responses, you might be interested in ${pluralizeExperience(names[0], list[0].name)}, or ${pluralizeExperience(names[1], list[1].name)}.`;
     } else {
-        const pluralNames = names.map((n, idx) => {
-            if (idx < names.length - 2) {
-                return pluralizeBolded(n, "s,");
-            } else if (idx === names.length - 2) {
-                return pluralizeBolded(n, "s,");
-            } else {
-                return pluralizeBolded(n, "s.");
-            }
-        });
+        const pluralNames = names.map((n, idx) => pluralizeExperience(n, list[idx].name));
         const allButLast = pluralNames.slice(0, -1).join(" ");
         const last = pluralNames[pluralNames.length - 1];
         message = `Based on your responses, you might be interested in ${allButLast} or ${last}`;

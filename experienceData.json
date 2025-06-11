@@ -182,7 +182,7 @@
         "Art": ["internship", "faculty help"],
         "Other": []
     },
-    
+
     "definitions": {
         "internship": "Internships are structured work experiences related to your field of study or career interests.",
         "research": "Research experiences involve working with faculty or labs to generate new knowledge.",
@@ -197,3 +197,4 @@
         "course credit": "These experiences can be counted toward your degree as academic credit."
     }
 }
+
