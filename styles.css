@@ -100,6 +100,37 @@ body {
     left: 0;
     right: 0;
     z-index: 10;
+        display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-height: 64px;
+}
+
+.chatbot-logo {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    border-radius: 0px;
+    margin-right: 0.5rem;
+    background: transparent;
+    box-shadow: 0 2px 8px rgba(0,77,64,0.08);
+    flex-shrink: 0;
+    margin-left: 0.5rem;
+    opacity: 50%;
+}
+
+.chatbot-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--pearl-white);
+    letter-spacing: 0.02em;
+    margin-right: auto;
+    text-align: left;
+    line-height: 1.2;
+    flex: 1 1 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Lock options drawer to the bottom on all screen sizes */
