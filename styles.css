@@ -1456,3 +1456,17 @@ body {
 .chatbot-cover {
     animation: chatbotCoverFlyIn 1s cubic-bezier(0.4, 0.0, 0.2, 1) both;
 }
+
+.feedback-button {
+        display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1em!important;
+    margin: -1.25rem;
+    width: fit-content;
+    border-radius: 0px;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+    background: transparent;
+    backdrop-filter: opacity(0);
+}
