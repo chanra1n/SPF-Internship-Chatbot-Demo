@@ -1,6 +1,6 @@
 {
   "name": "Find a Learning Experience",
-  "short_name": "LearningXP",
+  "short_name": "LearningXP Demo",
   "description": "Discover internships, research, service learning, and more at Cal Poly Humboldt. Get personalized campus resources and opportunities in just a few clicks.",
   "start_url": ".",
   "display": "standalone",
