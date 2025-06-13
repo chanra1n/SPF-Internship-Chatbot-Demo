@@ -1459,6 +1459,19 @@ body {
     margin-right: 0;
 }
 
+.feedback-button::before {
+    background: transparent!important;
+}
+
+.feedback-button:hover {
+    background: transparent!important;
+    backdrop-filter: opacity(0)!important;
+    opacity: 100%!important;
+    box-shadow: none!important;
+    border: none!important;
+    filter: none!important;
+}
+
 .desktop-only-message {
     display: none;
     margin-top: 2em;
