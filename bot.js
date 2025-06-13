@@ -1050,6 +1050,15 @@ function showOfficesResultsList(list, startIdx, userTags) {
             }}
         ]);
         unlockChatbotUI();
+        // --- Add feedback button as a final message ---
+        setTimeout(() => {
+            queueMessage(
+                `<button class="chatbot-option-btn feedback-button" onclick="window.open('https://forms.gle/y3fC1q7sthgipkaFA', '_blank')">
+                    Submit feedback <i class="ri-external-link-line" style="margin-left:0.5em;font-size:1em;"></i>
+                </button>`,
+                "bot"
+            );
+        }, 400);
     }
 }
 
