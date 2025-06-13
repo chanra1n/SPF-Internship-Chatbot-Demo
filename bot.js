@@ -1,5 +1,3 @@
-// --- DATA LOADING FROM JSON FILE ---
-
 let experiences = [];
 let offices = [];
 let majors = [];
@@ -383,22 +381,30 @@ async function chatbotStart() {
     if (!experiences.length || !offices.length || !majors.length || !Object.keys(departmentAttributes).length) {
         await loadExperienceData();
     }
-    chatbotState = { mode: "student", step: 0, filters: [], major: null };
+    chatbotState = { mode: null, step: 0, filters: [], major: null };
     filterAttempts = 0;
     filterTopicIndex = 0;
     filterSelections = {};
+
+    // Ensure a clean UI state before starting
     document.getElementById('chatbot-messages').innerHTML = '';
-    showFilterTags();
+    const optArea = document.getElementById('chatbot-options');
+    if (optArea) optArea.innerHTML = '';
     hideToolbar();
+    const tagArea = document.getElementById('chatbot-filter-tags');
+    if (tagArea) tagArea.style.display = "none";
+    showFilterTags();
+
     queueMessage("Opportunity awaits! To begin, let's get to know you a bit.", "bot", () => {
         setOptions([
-            { label: "I'm a Student", icon: "user-line", onClick: () => chatbotChooseMode("student") }
-            //{ label: "I'm Faculty/Staff", icon: "graduation-cap-line", onClick: () => chatbotChooseMode("faculty") },
-            //{ label: "I'm a Community Partner", icon: "team-line", onClick: () => chatbotChooseMode("community") }
+            { label: "I'm a Student", icon: "user-line", onClick: () => chatbotChooseMode("student") },
+            { label: "I'm Faculty / Staff", icon: "user-2-line", onClick: () => chatbotChooseMode("faculty") },
+            { label: "I'm a Community Partner", icon: "group-2-line", onClick: () => chatbotChooseMode("community") }
         ]);
     });
 }
 
+// --- Main mode router ---
 function chatbotChooseMode(mode) {
     chatbotState.mode = mode;
     queueMessage(
@@ -409,15 +415,652 @@ function chatbotChooseMode(mode) {
             : "Community Partner",
         "user"
     );
-    if (mode !== "student") {
-        queueMessage("Student mode is the main focus for this demo. Please select 'I'm a Student' to continue.", "bot", () => {
-            setOptions([{ label: "Back", icon: "arrow-left-line", onClick: chatbotStart }]);
-        });
-        return;
+    if (mode === "student") {
+        chatbotStudentFlowStart();
+    } else if (mode === "faculty") {
+        chatbotGenericFilterFlowStart("faculty");
+    } else if (mode === "community") {
+        chatbotGenericFilterFlowStart("community");
     }
-    chatbotAskMajor();
 }
 
+// --- Student flow (unchanged) ---
+function chatbotStudentFlowStart() {
+    chatbotState.step = 0;
+    chatbotState.filters = [];
+    chatbotState.major = null;
+    filterTopicIndex = 0;
+    filterSelections = {};
+    showFilterTags();
+    hideToolbar();
+    queueMessage("Alright. What's your major?", "bot", () => {
+        setOptions(
+            majors.map(m => ({
+                label: m,
+                onClick: () => chatbotSetMajor(m)
+            }))
+        );
+    });
+}
+
+// --- Generic filter flow for faculty/staff and community partners ---
+function chatbotGenericFilterFlowStart(role) {
+    chatbotState.step = 0;
+    chatbotState.filters = [];
+    chatbotState.major = null;
+    filterTopicIndex = 0;
+    filterSelections = {};
+    showFilterTags();
+    hideToolbar();
+    // Role-specific intro
+    let introMsg = "";
+    if (role === "faculty") {
+        introMsg = "What's your department, or focus area?";
+    } else if (role === "community") {
+        introMsg = "What is your organization or focus area?";
+    }
+    queueMessage(introMsg, "bot", () => {
+        setOptions(
+            majors.map(m => ({
+                label: m,
+                onClick: () => chatbotSetGenericMajor(role, m)
+            }))
+        );
+    });
+}
+
+function chatbotSetGenericMajor(role, major) {
+    chatbotState.major = major;
+    queueMessage(major, "user", () => {
+        filterTopicIndex = 0;
+        filterSelections = {};
+        chatbotState.filters = [];
+        showFilterTags();
+        chatbotAskGenericFilterTopic(role);
+    });
+}
+
+function chatbotAskGenericFilterTopic(role) {
+    // If all topics done, show results
+    if (filterTopicIndex >= genericFilterTopics.length) {
+        chatbotState.filters = Object.values(filterSelections).flat();
+        showFilterTags();
+        chatbotShowGenericResults(role, chatbotState.filters);
+        return;
+    }
+    const topic = genericFilterTopics[filterTopicIndex];
+    // Role-specific question phrasing
+    let label = topic.label;
+    if (role === "faculty") {
+        if (topic.key === "type") label = "What kind of experience are you looking to offer or support?";
+        else if (topic.key === "compensation") label = "Will this opportunity be paid or unpaid?";
+        else if (topic.key === "location") label = "Where will the experience take place?";
+        else if (topic.key === "timing") label = "When will the experience be available?";
+        else if (topic.key === "credit") label = "Can students earn course credit for this experience?";
+    } else if (role === "community") {
+        if (topic.key === "type") label = "What type of experience are you looking to provide?";
+        else if (topic.key === "compensation") label = "Will this opportunity be paid or unpaid?";
+        else if (topic.key === "location") label = "Where will the experience take place?";
+        else if (topic.key === "timing") label = "When will the experience be available?";
+        else if (topic.key === "credit") label = "Can students earn course credit for this experience?";
+    }
+    queueMessage(label, "bot", () => {
+        renderGenericFilterScreen(role, topic);
+    });
+}
+
+function renderGenericFilterScreen(role, topic) {
+    const optArea = document.getElementById('chatbot-options');
+    optArea.innerHTML = '';
+
+    showToolbar();
+    updatePersistentToolbar(topic);
+
+    const currentSelectionsForTopic = filterSelections[topic.key] || [];
+    topic.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'chatbot-option-btn';
+        if (currentSelectionsForTopic.includes(opt.value)) btn.classList.add('selected');
+        if (opt.icon) {
+            const iconCircle = document.createElement('div');
+            iconCircle.className = 'chatbot-btn-icon-circle';
+            const icon = document.createElement('i');
+            icon.className = `ri-${opt.icon}`;
+            icon.setAttribute('aria-hidden', 'true');
+            iconCircle.appendChild(icon);
+            btn.appendChild(iconCircle);
+        }
+        const labelSpan = document.createElement('span');
+        labelSpan.className = 'chatbot-btn-label';
+        labelSpan.textContent = opt.label;
+        btn.appendChild(labelSpan);
+
+        // Info icon
+        const infoBtn = document.createElement('button');
+        infoBtn.type = 'button';
+        infoBtn.className = 'chatbot-info-btn';
+        infoBtn.style.position = 'absolute';
+        infoBtn.style.right = '0.7em';
+        infoBtn.style.top = '50%';
+        infoBtn.style.transform = 'translateY(-50%)';
+        infoBtn.style.background = 'none';
+        infoBtn.style.border = 'none';
+        infoBtn.style.padding = '0';
+        infoBtn.style.margin = '0';
+        infoBtn.style.cursor = 'pointer';
+        infoBtn.style.fontSize = '1.2em';
+        infoBtn.style.color = '#888';
+        infoBtn.setAttribute('tabindex', '0');
+        infoBtn.setAttribute('aria-label', `More info about ${opt.label}`);
+        infoBtn.innerHTML = '<i class="ri-information-line" style = "color: var(--ocean-deep);opacity: 50%;"></i>';
+        infoBtn.onclick = (e) => {
+            e.stopPropagation();
+            showInfoModal(opt.label, definitions[opt.value] || "No additional information available.");
+        };
+        btn.style.position = 'relative';
+        btn.appendChild(infoBtn);
+
+        btn.onclick = () => {
+            let selections = filterSelections[topic.key] || [];
+            const isSelected = selections.includes(opt.value);
+            if (isSelected) {
+                selections = selections.filter(v => v !== opt.value);
+                btn.classList.remove('selected');
+            } else {
+                selections = [...selections, opt.value];
+                btn.classList.add('selected');
+            }
+            filterSelections[topic.key] = selections;
+            showFilterTags();
+            updatePersistentToolbar(topic);
+            scrollMessagesToBottom();
+        };
+
+        btn.style.animationDelay = (0.08 * idx) + 's';
+        optArea.appendChild(btn);
+        void btn.offsetWidth;
+        btn.style.opacity = '';
+    });
+
+    setTimeout(() => {
+        optArea.scrollTop = 0;
+        scrollMessagesToBottom();
+    }, 0);
+}
+
+function updatePersistentToolbar(topic) {
+    const toolbar = document.getElementById('chatbot-toolbar');
+    if (!toolbar) return;
+
+    // --- Determine which filter topics array to use based on mode ---
+    let topicsArr = filterTopics;
+    if (chatbotState.mode === "faculty" || chatbotState.mode === "community") {
+        topicsArr = genericFilterTopics;
+    }
+
+    const shouldShow =
+        typeof filterTopicIndex === 'number' &&
+        filterTopicIndex >= 0 &&
+        filterTopicIndex < topicsArr.length;
+
+    if (shouldShow) {
+        toolbar.classList.add('show');
+    } else {
+        toolbar.classList.remove('show');
+    }
+
+    if (!shouldShow) return;
+
+    const btnBack = document.getElementById('chatbot-toolbar-back');
+    const btnNext = document.getElementById('chatbot-toolbar-next');
+
+    const showBack = filterTopicIndex > 0;
+    const showNext = filterTopicIndex < topicsArr.length - 1;
+
+    btnBack.style.display = showBack ? '' : 'none';
+    btnNext.style.display = showNext ? '' : 'none';
+
+    btnBack.innerHTML = '';
+    btnNext.innerHTML = '';
+
+    const selections = filterSelections[topic.key] || [];
+    const nextLabel = selections.length === 0 ? 'Skip' : 'Next';
+
+    function makeBtnContent(labelText, iconClass, arrowAfter = true) {
+        const label = document.createElement('span');
+        label.className = 'chatbot-btn-label';
+        label.textContent = labelText;
+        const icon = document.createElement('i');
+        icon.className = `ri-${iconClass}`;
+        icon.setAttribute('aria-hidden', 'true');
+        const wrapper = document.createElement('span');
+        wrapper.style.display = 'inline-flex';
+        wrapper.style.alignItems = 'center';
+        if (arrowAfter) {
+            label.style.marginRight = '0.5em';
+            wrapper.appendChild(label);
+            wrapper.appendChild(icon);
+        } else {
+            icon.style.marginRight = '0.5em';
+            wrapper.appendChild(icon);
+            wrapper.appendChild(label);
+        }
+        return wrapper;
+    }
+
+    if (showBack && !showNext) {
+        btnBack.appendChild(makeBtnContent('Back', 'arrow-left-line', false)); // ARROW TEXT
+    } else if (!showBack && showNext) {
+        btnNext.appendChild(makeBtnContent(nextLabel, 'arrow-right-line', true)); // TEXT ARROW
+    } else if (showNext) {
+        btnBack.appendChild(makeBtnContent('Back', 'arrow-left-line', false)); // ARROW TEXT
+        btnNext.appendChild(makeBtnContent(nextLabel, 'arrow-right-line', true)); // TEXT ARROW
+    }
+
+    // Remove previous click handlers to avoid stacking
+    btnBack.onclick = null;
+    btnNext.onclick = null;
+
+    btnBack.onclick = () => {
+        if (chatbotUILocked) return;
+        lockChatbotUI();
+        showLoadingOverlay();
+        setTimeout(() => {
+            const msgArea = document.getElementById('chatbot-messages');
+            if (msgArea) {
+                filterTopicIndex--;
+                const prevTopic = topicsArr[filterTopicIndex];
+                while (msgArea.lastElementChild) {
+                    const last = msgArea.lastElementChild;
+                    const isBotMsg = last.classList.contains('bot');
+                    if (isBotMsg && last.querySelector('.chatbot-bubble')?.textContent === prevTopic.label) {
+                        break;
+                    }
+                    msgArea.removeChild(last);
+                }
+                if (msgArea.lastElementChild && msgArea.lastElementChild.classList.contains('bot') &&
+                    msgArea.lastElementChild.querySelector('.chatbot-bubble')?.textContent === prevTopic.label) {
+                    msgArea.removeChild(msgArea.lastElementChild);
+                }
+                queueMessage(prevTopic.label, "bot", () => {
+                    // --- Use correct render function for mode ---
+                    if (chatbotState.mode === "faculty" || chatbotState.mode === "community") {
+                        renderGenericFilterScreen(chatbotState.mode, prevTopic);
+                    } else {
+                        renderFilterScreen(prevTopic);
+                    }
+                    hideLoadingOverlay();
+                });
+            } else {
+                hideLoadingOverlay();
+            }
+        }, 500);
+    };
+
+    btnNext.onclick = () => {
+        if (chatbotUILocked) return;
+        lockChatbotUI();
+        showLoadingOverlay();
+        setTimeout(() => {
+            const topic = topicsArr[filterTopicIndex];
+            const selections = filterSelections[topic.key] || [];
+            const userMsgs = selections.map(sel => {
+                const opt = topic.options.find(o => o.value === sel);
+                return opt ? opt.label : sel;
+            });
+            const nextBotLabel = topicsArr[filterTopicIndex + 1]?.label;
+            queueUserAndBotMessages(
+                userMsgs,
+                nextBotLabel,
+                () => {
+                    filterTopicIndex++;
+                    // --- Use correct render function for mode ---
+                    if (chatbotState.mode === "faculty" || chatbotState.mode === "community") {
+                        renderGenericFilterScreen(chatbotState.mode, topicsArr[filterTopicIndex]);
+                    } else {
+                        renderFilterScreen(topicsArr[filterTopicIndex]);
+                    }
+                    hideLoadingOverlay();
+                }
+            );
+        }, 500);
+    };
+
+    // --- Update next/skip label live when selections change ---
+    const optArea = document.getElementById('chatbot-options');
+    if (optArea && btnNext) {
+        if (btnNext._labelUpdater) {
+            optArea.removeEventListener('click', btnNext._labelUpdater);
+        }
+        btnNext._labelUpdater = function () {
+            setTimeout(() => {
+                const selections = filterSelections[topic.key] || [];
+                btnNext.innerHTML = '';
+                btnNext.appendChild(makeBtnContent(selections.length === 0 ? 'Skip' : 'Next', 'arrow-right-line', true));
+                btnNext.onclick = () => {
+                    if (chatbotUILocked) return;
+                    lockChatbotUI();
+                    showLoadingOverlay();
+                    setTimeout(() => {
+                        const topic = topicsArr[filterTopicIndex];
+                        const selections = filterSelections[topic.key] || [];
+                        const userMsgs = selections.map(sel => {
+                            const opt = topic.options.find(o => o.value === sel);
+                            return opt ? opt.label : sel;
+                        });
+                        const nextBotLabel = topicsArr[filterTopicIndex + 1]?.label;
+                        queueUserAndBotMessages(
+                            userMsgs,
+                            nextBotLabel,
+                            () => {
+                                filterTopicIndex++;
+                                // --- Use correct render function for mode ---
+                                if (chatbotState.mode === "faculty" || chatbotState.mode === "community") {
+                                    renderGenericFilterScreen(chatbotState.mode, topicsArr[filterTopicIndex]);
+                                } else {
+                                    renderFilterScreen(topicsArr[filterTopicIndex]);
+                                }
+                                hideLoadingOverlay();
+                            }
+                        );
+                    }, 500);
+                };
+            }, 10);
+        };
+        optArea.addEventListener('click', btnNext._labelUpdater);
+    }
+
+    const btnResults = document.getElementById('chatbot-toolbar-results');
+    btnResults.style.display = filterTopicIndex === topicsArr.length - 1 ? '' : 'none';
+    btnResults.onclick = () => {
+        chatbotState.filters = Object.values(filterSelections).flat();
+        chatbotShowResults(chatbotState.filters);
+    };
+
+    // Add or remove the rainbow fill class for the "show results" button
+    if (filterTopicIndex === topicsArr.length - 1) {
+        btnResults.classList.add('rainbow-border');
+    } else {
+        btnResults.classList.remove('rainbow-border');
+    }
+
+    // Hide the restart button on the last step (when results button is shown)
+    const btnStartOver = document.getElementById('chatbot-toolbar-startover');
+    btnStartOver.style.display = filterTopicIndex === topicsArr.length - 1 ? 'none' : '';
+    btnStartOver.onclick = () => {
+        if (chatbotUILocked) return;
+        lockChatbotUI();
+        chatbotStart();
+    };
+}
+
+// --- Add: Helper function to format experience terms into a single message string ---
+function formatExperienceTermsMessage(experiencesList, introPrefix) {
+    if (!experiencesList || experiencesList.length === 0) {
+        // Fallback if no experiences, though typically handled before calling this
+        return introPrefix + "no specific experiences found. We can look at general campus resources.";
+    }
+
+    // Local pluralizeExperience helper
+    function pluralizeExperience(name, expName) {
+        expName = expName.toLowerCase();
+        if (expName === "research" || expName === "service learning") {
+            return name; // No pluralization
+        }
+        if (expName === "practicum") {
+            return name.replace(/(<b>)(.*?)(<\/b>)/i, (_, open, inner, close) => `${open}practica${close}`);
+        }
+        return name.replace(/(<b>)(.*?)(<\/b>)/i, (_, open, inner, close) => `${open}${inner}s${close}`);
+    }
+
+    const clickableNames = experiencesList.map(exp =>
+        `<span class="chatbot-def-term" data-exp-name="${encodeURIComponent(exp.name)}"><b>${exp.name.toLowerCase()}<i class="ri-information-fill chatbot-term-info"></i></b></span>`
+    );
+
+    const pluralizedNames = experiencesList.map((exp, idx) => pluralizeExperience(clickableNames[idx], exp.name));
+
+    let termsPortion;
+    if (pluralizedNames.length === 1) {
+        termsPortion = pluralizedNames[0] + ".";
+    } else if (pluralizedNames.length === 2) {
+        termsPortion = `${pluralizedNames[0]}, or ${pluralizedNames[1]}.`;
+    } else { // More than 2
+        const allButLast = pluralizedNames.slice(0, -1).join(", ");
+        const last = pluralizedNames[pluralizedNames.length - 1];
+        termsPortion = `${allButLast}, or ${last}.`;
+    }
+    return introPrefix + termsPortion;
+}
+
+// --- Add: Helper function to attach click handlers to definition terms ---
+function attachClickHandlersToTerms(experienceDataArray) {
+    const msgArea = document.getElementById('chatbot-messages');
+    if (!msgArea) return;
+    // Target terms in the last bot message to avoid re-attaching to old messages
+    const lastBotBubble = msgArea.querySelector('.chatbot-msg.bot:last-child .chatbot-bubble');
+    if (!lastBotBubble) return;
+
+    const terms = lastBotBubble.querySelectorAll('.chatbot-def-term');
+    terms.forEach(term => {
+        term.style.cursor = "pointer";
+        term.title = "Tap to see definition";
+        // Remove old handler before adding new one to prevent duplicates if this function were ever called on same bubble
+        term.onclick = null;
+        term.onclick = function(e) {
+            const expName = decodeURIComponent(term.getAttribute('data-exp-name'));
+            const exp = experienceDataArray.find(x => x.name.toLowerCase() === expName.toLowerCase());
+            if (exp) {
+                showInfoModal(exp.name, exp.description || "No additional information available.");
+            }
+        };
+    });
+}
+
+
+function chatbotShowResults(filters) {
+    hideToolbar();
+    chatbotState.filters = filters;
+    showFilterTags();
+
+    const msgArea = document.getElementById('chatbot-messages');
+    if (msgArea) {
+        msgArea.innerHTML = '';
+    }
+
+    const canonicalTerms = [
+        "academic internship", "paid internship", "research", "fellowship",
+        "service learning", "clinical placement", "practicum"
+    ];
+
+    let userTags = [];
+    if (chatbotState.major && departmentAttributes[chatbotState.major]) {
+        userTags = [...departmentAttributes[chatbotState.major]];
+    }
+    if (chatbotState.major) {
+        userTags.push(chatbotState.major.toLowerCase());
+    }
+    userTags = userTags.concat(filters.map(f => f.toLowerCase()));
+
+    function matchScore(exp) {
+        let expTags = (exp.tags || []).map(t => t.toLowerCase());
+        let score = userTags.reduce((s, tag) => expTags.includes(tag) ? s + 1 : s, 0);
+        if (canonicalTerms.includes(exp.name.toLowerCase())) score += 2;
+        return score;
+    }
+
+    let scoredResults = experiences.map(exp => ({ ...exp, _score: matchScore(exp) }))
+        .filter(exp => canonicalTerms.includes(exp.name.toLowerCase()));
+
+    let maxScore = 0;
+    scoredResults.forEach(exp => { if (exp._score > maxScore) maxScore = exp._score; });
+
+    let finalResults = [];
+    if (maxScore > 0) {
+        finalResults = scoredResults.filter(exp => exp._score === maxScore);
+    }
+
+    if (finalResults.length === 0) {
+        let relaxedResults = [];
+        let relaxedFilters = [...filters];
+        while (relaxedResults.length === 0 && relaxedFilters.length > 0) {
+            relaxedFilters.pop();
+            relaxedResults = experiences.filter(exp => canonicalTerms.includes(exp.name.toLowerCase()));
+            if (chatbotState.major && departmentAttributes[chatbotState.major]) {
+                relaxedResults = relaxedResults.filter(exp =>
+                    departmentAttributes[chatbotState.major].some(tag => exp.tags.includes(tag)) ||
+                    exp.tags.includes(chatbotState.major.toLowerCase())
+                );
+            }
+            if (relaxedFilters.length) {
+                relaxedResults = relaxedResults.filter(exp =>
+                    relaxedFilters.every(f => exp.tags.some(tag => tag.toLowerCase().includes(f.toLowerCase())))
+                );
+            }
+        }
+        if (relaxedResults.length > 0) {
+            relaxedResults = relaxedResults.map(exp => ({ ...exp, _score: matchScore(exp) }));
+            let relaxedMax = 0;
+            relaxedResults.forEach(exp => { if (exp._score > relaxedMax) relaxedMax = exp._score; });
+            relaxedResults = relaxedResults.filter(exp => exp._score === relaxedMax && relaxedMax > 0)
+                .sort((a, b) => b._score - a._score || a.name.localeCompare(b.name));
+
+            const intro = "Hmm. We weren't able to find an experience that matched all your filters, so we relaxed them a bit. Here are some options that might interest you, based on your major and/or remaining filters: ";
+            const message = formatExperienceTermsMessage(relaxedResults, intro);
+            addMessage(message, "bot", () => {
+                attachClickHandlersToTerms(experiences);
+                chatbotShowOffices();
+            });
+        } else {
+            addMessage("No matches found, sorry. Try different filters?", "bot", () => {
+                setOptions([
+                    { label: "Try Different Filters", icon: "filter-line", onClick: () => {
+                        filterTopicIndex = 0;
+                        filterSelections = {};
+                        chatbotAskFilterTopic(); // This is for student flow
+                    }}
+                ]);
+            });
+        }
+        return;
+    }
+
+    finalResults.sort((a, b) => b._score - a._score || a.name.localeCompare(b.name));
+    
+    // For student flow, showExperienceResultsList will handle the intro message
+    showExperienceResultsList(finalResults);
+}
+
+
+// --- Add: Generic results function for faculty/community, using single message ---
+function chatbotShowGenericResults(role, filters) {
+    hideToolbar();
+    chatbotState.filters = filters;
+    showFilterTags();
+
+    const msgArea = document.getElementById('chatbot-messages');
+    if (msgArea) {
+        msgArea.innerHTML = '';
+    }
+
+    const canonicalTerms = [
+        "academic internship", "paid internship", "research", "fellowship",
+        "service learning", "clinical placement", "practicum"
+    ];
+
+    let userTags = [];
+    if (chatbotState.major && departmentAttributes[chatbotState.major]) {
+        userTags = [...departmentAttributes[chatbotState.major]];
+    }
+    if (chatbotState.major) {
+        userTags.push(chatbotState.major.toLowerCase());
+    }
+    userTags = userTags.concat(filters.map(f => f.toLowerCase()));
+
+    function matchScore(exp) {
+        let expTags = (exp.tags || []).map(t => t.toLowerCase());
+        let score = userTags.reduce((s, tag) => expTags.includes(tag) ? s + 1 : s, 0);
+        if (canonicalTerms.includes(exp.name.toLowerCase())) score += 2;
+        return score;
+    }
+
+    let scoredResults = experiences.map(exp => ({ ...exp, _score: matchScore(exp) }))
+        .filter(exp => canonicalTerms.includes(exp.name.toLowerCase()));
+
+    let maxScore = 0;
+    scoredResults.forEach(exp => { if (exp._score > maxScore) maxScore = exp._score; });
+
+    let finalResults = [];
+    if (maxScore > 0) {
+        finalResults = scoredResults.filter(exp => exp._score === maxScore);
+    }
+
+    if (finalResults.length === 0) {
+        let relaxedResults = [];
+        let relaxedFilters = [...filters];
+        while (relaxedResults.length === 0 && relaxedFilters.length > 0) {
+            relaxedFilters.pop();
+            // Re-filter based on remaining relaxedFilters and major
+            relaxedResults = experiences.filter(exp => canonicalTerms.includes(exp.name.toLowerCase()));
+             if (chatbotState.major && departmentAttributes[chatbotState.major]) {
+                relaxedResults = relaxedResults.filter(exp =>
+                    departmentAttributes[chatbotState.major].some(tag => exp.tags.includes(tag)) ||
+                    exp.tags.includes(chatbotState.major.toLowerCase())
+                );
+            }
+            if (relaxedFilters.length) {
+                relaxedResults = relaxedResults.filter(exp =>
+                    relaxedFilters.every(f => exp.tags.some(tag => tag.toLowerCase().includes(f.toLowerCase())))
+                );
+            }
+        }
+
+        if (relaxedResults.length > 0) {
+            relaxedResults = relaxedResults.map(exp => ({ ...exp, _score: matchScore(exp) }));
+            let relaxedMax = 0;
+            relaxedResults.forEach(exp => { if (exp._score > relaxedMax) relaxedMax = exp._score; });
+            relaxedResults = relaxedResults.filter(exp => exp._score === relaxedMax && relaxedMax > 0)
+                .sort((a, b) => b._score - a._score || a.name.localeCompare(b.name));
+            
+            const intro = "Hmm. We weren't able to find an experience that matched all your filters, so we relaxed them a bit. Here are some options that might interest you: ";
+            const message = formatExperienceTermsMessage(relaxedResults, intro);
+            addMessage(message, "bot", () => {
+                attachClickHandlersToTerms(experiences);
+                chatbotShowOffices();
+            });
+        } else {
+            addMessage("No matches found, sorry. Try different filters?", "bot", () => {
+                setOptions([
+                    { label: "Try Different Filters", icon: "filter-line", onClick: () => {
+                        filterTopicIndex = 0;
+                        filterSelections = {};
+                        chatbotAskGenericFilterTopic(role); // Use generic for faculty/community
+                    }}
+                ]);
+            });
+        }
+        return;
+    }
+
+    finalResults.sort((a, b) => b._score - a._score || a.name.localeCompare(b.name));
+
+    let introText = "";
+    if (role === "faculty") {
+        introText = "Based on your selections, you may want to offer or support ";
+    } else if (role === "community") {
+        introText = "Based on your selections, you may want to partner on or host ";
+    } else { // Should not happen for generic flow, but as a fallback
+        introText = "Based on your responses, you might be interested in ";
+    }
+
+    const message = formatExperienceTermsMessage(finalResults, introText);
+    addMessage(message, "bot", () => {
+        attachClickHandlersToTerms(experiences);
+        chatbotShowOffices();
+    });
+}
+
+
+// --- Student flow continues as before ---
 function chatbotAskMajor() {
     hideToolbar();
     queueMessage("Alright. What's your major?", "bot", () => {
@@ -441,7 +1084,7 @@ function chatbotSetMajor(major) {
     });
 }
 
-// Define filter topics (grouped logically) for multi-step selection
+// Define filter topics for student flow
 const filterTopics = [
     {
         key: "type",
@@ -480,6 +1123,51 @@ const filterTopics = [
     {
         key: "credit",
         label: "Are you interested in potentially earning course credit?",
+        options: [
+            { label: "Course Credit", icon: "graduation-cap-line", value: "course credit" }
+        ]
+    }
+];
+
+// --- Add: Define filter topics for faculty/community (generic) flow ---
+const genericFilterTopics = [
+    {
+        key: "type",
+        label: "What type of experience do you want to offer or support?",
+        options: [
+            { label: "Internships", icon: "briefcase-line", value: "internship" },
+            { label: "Research", icon: "flask-line", value: "research" },
+            { label: "Service Learning", icon: "service-line", value: "service learning" },
+            { label: "Job Shadowing", icon: "eye-line", value: "shadowing" }
+        ]
+    },
+    {
+        key: "compensation",
+        label: "Will this opportunity be paid or unpaid?",
+        options: [
+            { label: "Paid", icon: "money-dollar-circle-line", value: "paid" },
+            { label: "Unpaid", icon: "close-circle-line", value: "not paid" }
+        ]
+    },
+    {
+        key: "location",
+        label: "Where will the experience take place?",
+        options: [
+            { label: "On Campus", icon: "hotel-line", value: "on-campus" },
+            { label: "Off Campus", icon: "road-map-line", value: "off-campus" }
+        ]
+    },
+    {
+        key: "timing",
+        label: "When will the experience be available?",
+        options: [
+            { label: "Academic Year", icon: "calendar-event-line", value: "academic year" },
+            { label: "Summer", icon: "sun-line", value: "summer" }
+        ]
+    },
+    {
+        key: "credit",
+        label: "Will students earn course credit for this experience?",
         options: [
             { label: "Course Credit", icon: "graduation-cap-line", value: "course credit" }
         ]
@@ -589,374 +1277,24 @@ function renderFilterScreen(topic) {
     }, 0);
 }
 
-function updatePersistentToolbar(topic) {
-    const toolbar = document.getElementById('chatbot-toolbar');
-    if (!toolbar) return;
-
-    // Only show toolbar during filter selection steps
-    const shouldShow =
-        typeof filterTopicIndex === 'number' &&
-        filterTopicIndex >= 0 &&
-        filterTopicIndex < filterTopics.length;
-
-    if (shouldShow) {
-        toolbar.classList.add('show');
-    } else {
-        toolbar.classList.remove('show');
-    }
-
-    if (!shouldShow) return;
-
-    const btnBack = document.getElementById('chatbot-toolbar-back');
-    const btnNext = document.getElementById('chatbot-toolbar-next');
-
-    const showBack = filterTopicIndex > 0;
-    const showNext = filterTopicIndex < filterTopics.length - 1;
-
-    btnBack.style.display = showBack ? '' : 'none';
-    btnNext.style.display = showNext ? '' : 'none';
-
-    // Remove any previous text label and icons
-    btnBack.innerHTML = '';
-    btnNext.innerHTML = '';
-
-    // --- Dynamic Next/Skip label logic ---
-    const selections = filterSelections[topic.key] || [];
-    const nextLabel = selections.length === 0 ? 'Skip' : 'Next';
-
-    // Helper to create label+icon span (arrow after or before text)
-    function makeBtnContent(labelText, iconClass, arrowAfter = true) {
-        const label = document.createElement('span');
-        label.className = 'chatbot-btn-label';
-        label.textContent = labelText;
-        const icon = document.createElement('i');
-        icon.className = `ri-${iconClass}`;
-        icon.setAttribute('aria-hidden', 'true');
-        const wrapper = document.createElement('span');
-        wrapper.style.display = 'inline-flex';
-        wrapper.style.alignItems = 'center';
-        if (arrowAfter) {
-            label.style.marginRight = '0.5em';
-            wrapper.appendChild(label);
-            wrapper.appendChild(icon);
-        } else {
-            icon.style.marginRight = '0.5em';
-            wrapper.appendChild(icon);
-            wrapper.appendChild(label);
-        }
-        return wrapper;
-    }
-
-    // Always add the content, but set up the click handlers after
-    if (showBack && !showNext) {
-        btnBack.appendChild(makeBtnContent('Back', 'arrow-left-line', false)); // ARROW TEXT
-    } else if (!showBack && showNext) {
-        btnNext.appendChild(makeBtnContent(nextLabel, 'arrow-right-line', true)); // TEXT ARROW
-    } else if (showNext) {
-        btnBack.appendChild(makeBtnContent('Back', 'arrow-left-line', false)); // ARROW TEXT
-        btnNext.appendChild(makeBtnContent(nextLabel, 'arrow-right-line', true)); // TEXT ARROW
-    }
-
-    // Remove previous click handlers to avoid stacking
-    btnBack.onclick = null;
-    btnNext.onclick = null;
-
-    btnBack.onclick = () => {
-        if (chatbotUILocked) return;
-        lockChatbotUI();
-        showLoadingOverlay();
-        setTimeout(() => {
-            const msgArea = document.getElementById('chatbot-messages');
-            if (msgArea) {
-                filterTopicIndex--;
-                const prevTopic = filterTopics[filterTopicIndex];
-                while (msgArea.lastElementChild) {
-                    const last = msgArea.lastElementChild;
-                    const isBotMsg = last.classList.contains('bot');
-                    if (isBotMsg && last.querySelector('.chatbot-bubble')?.textContent === prevTopic.label) {
-                        break;
-                    }
-                    msgArea.removeChild(last);
-                }
-                if (msgArea.lastElementChild && msgArea.lastElementChild.classList.contains('bot') &&
-                    msgArea.lastElementChild.querySelector('.chatbot-bubble')?.textContent === prevTopic.label) {
-                    msgArea.removeChild(msgArea.lastElementChild);
-                }
-                // Always delay between user and bot bubbles
-                queueMessage(prevTopic.label, "bot", () => {
-                    renderFilterScreen(prevTopic);
-                    hideLoadingOverlay();
-                });
-            } else {
-                hideLoadingOverlay();
-            }
-        }, 500);
-    };
-
-    btnNext.onclick = () => {
-        if (chatbotUILocked) return;
-        lockChatbotUI();
-        showLoadingOverlay();
-        setTimeout(() => {
-            const topic = filterTopics[filterTopicIndex];
-            const selections = filterSelections[topic.key] || [];
-            const userMsgs = selections.map(sel => {
-                const opt = topic.options.find(o => o.value === sel);
-                return opt ? opt.label : sel;
-            });
-            const nextBotLabel = filterTopics[filterTopicIndex + 1]?.label;
-            queueUserAndBotMessages(
-                userMsgs,
-                nextBotLabel,
-                () => {
-                    filterTopicIndex++;
-                    renderFilterScreen(filterTopics[filterTopicIndex]);
-                    hideLoadingOverlay();
-                }
-            );
-        }, 500);
-    };
-
-    // --- Update next/skip label live when selections change ---
-    const optArea = document.getElementById('chatbot-options');
-    if (optArea && btnNext) {
-        if (btnNext._labelUpdater) {
-            optArea.removeEventListener('click', btnNext._labelUpdater);
-        }
-        btnNext._labelUpdater = function () {
-            setTimeout(() => {
-                const selections = filterSelections[topic.key] || [];
-                btnNext.innerHTML = '';
-                btnNext.appendChild(makeBtnContent(selections.length === 0 ? 'Skip' : 'Next', 'arrow-right-line', true));
-                btnNext.onclick = () => {
-                    if (chatbotUILocked) return;
-                    lockChatbotUI();
-                    showLoadingOverlay();
-                    setTimeout(() => {
-                        const topic = filterTopics[filterTopicIndex];
-                        const selections = filterSelections[topic.key] || [];
-                        const userMsgs = selections.map(sel => {
-                            const opt = topic.options.find(o => o.value === sel);
-                            return opt ? opt.label : sel;
-                        });
-                        const nextBotLabel = filterTopics[filterTopicIndex + 1]?.label;
-                        queueUserAndBotMessages(
-                            userMsgs,
-                            nextBotLabel,
-                            () => {
-                                filterTopicIndex++;
-                                renderFilterScreen(filterTopics[filterTopicIndex]);
-                                hideLoadingOverlay();
-                            }
-                        );
-                    }, 500);
-                };
-            }, 10);
-        };
-        optArea.addEventListener('click', btnNext._labelUpdater);
-    }
-
-    const btnResults = document.getElementById('chatbot-toolbar-results');
-    btnResults.style.display = filterTopicIndex === filterTopics.length - 1 ? '' : 'none';
-    btnResults.onclick = () => {
-        chatbotState.filters = Object.values(filterSelections).flat();
-        chatbotShowResults(chatbotState.filters);
-    };
-
-    // Add or remove the rainbow fill class for the "show results" button
-    if (filterTopicIndex === filterTopics.length - 1) {
-        btnResults.classList.add('rainbow-border');
-    } else {
-        btnResults.classList.remove('rainbow-border');
-    }
-
-    // Hide the restart button on the last step (when results button is shown)
-    const btnStartOver = document.getElementById('chatbot-toolbar-startover');
-    btnStartOver.style.display = filterTopicIndex === filterTopics.length - 1 ? 'none' : '';
-    btnStartOver.onclick = () => {
-        if (chatbotUILocked) return;
-        lockChatbotUI();
-        chatbotStart();
-    };
-}
-
-function chatbotShowResults(filters) {
-    hideToolbar();
-    chatbotState.filters = filters;
-    showFilterTags();
-
-    // --- Clear all previous messages before showing results ---
-    const msgArea = document.getElementById('chatbot-messages');
-    if (msgArea) {
-        msgArea.innerHTML = '';
-    }
-
-    // Canonical result terms for matching
-    const canonicalTerms = [
-        "academic internship",
-        "paid internship",
-        "research",
-        "fellowship",
-        "service learning",
-        "clinical placement",
-        "practicum"
-    ];
-
-    // Gather all user tags (major + filters)
-    let userTags = [];
-    if (chatbotState.major && departmentAttributes[chatbotState.major]) {
-        userTags = [...departmentAttributes[chatbotState.major]];
-    }
-    if (chatbotState.major) {
-        userTags.push(chatbotState.major.toLowerCase());
-    }
-    userTags = userTags.concat(filters.map(f => f.toLowerCase()));
-
-    // --- Compute match score for each experience, prioritize canonical terms ---
-    function matchScore(exp) {
-        let expTags = (exp.tags || []).map(t => t.toLowerCase());
-        let score = userTags.reduce((score, tag) => expTags.includes(tag) ? score + 1 : score, 0);
-        // Boost score if experience is a canonical term and matches a filter
-        if (canonicalTerms.includes(exp.name.toLowerCase())) {
-            score += 2;
-        }
-        return score;
-    }
-
-    // Attach score to each experience
-    let scoredResults = experiences.map(exp => ({ ...exp, _score: matchScore(exp) }));
-
-    // Only show canonical result terms (filter out non-canonical if any)
-    scoredResults = scoredResults.filter(exp => canonicalTerms.includes(exp.name.toLowerCase()));
-
-    // Find the highest score
-    let maxScore = 0;
-    scoredResults.forEach(exp => { if (exp._score > maxScore) maxScore = exp._score; });
-
-    // Only include results with the highest score (and at least 1 match)
-    let finalResults = [];
-    if (maxScore > 0) {
-        finalResults = scoredResults.filter(exp => exp._score === maxScore);
-    }
-
-    // If nothing matched at all, fallback to previous relaxation logic
-    if (finalResults.length === 0) {
-        // Try relaxing filters one by one (from last to first)
-        let relaxedResults = [];
-        let relaxedFilters = [...filters];
-        let removed = [];
-        while (relaxedResults.length === 0 && relaxedFilters.length > 0) {
-            removed.unshift(relaxedFilters.pop());
-            relaxedResults = experiences.filter(exp => canonicalTerms.includes(exp.name.toLowerCase()));
-            if (chatbotState.major && departmentAttributes[chatbotState.major]) {
-                relaxedResults = relaxedResults.filter(exp =>
-                    departmentAttributes[chatbotState.major].some(tag =>
-                        exp.tags.includes(tag)
-                    ) || exp.tags.includes(chatbotState.major.toLowerCase())
-                );
-            }
-            if (relaxedFilters.length) {
-                relaxedResults = relaxedResults.filter(exp =>
-                    relaxedFilters.every(f =>
-                        exp.tags.some(tag => tag.toLowerCase().includes(f.toLowerCase()))
-                    )
-                );
-            }
-        }
-        if (relaxedResults.length > 0) {
-            // Only show the highest score matches from relaxed results
-            relaxedResults = relaxedResults
-                .map(exp => ({ ...exp, _score: matchScore(exp) }));
-            let relaxedMax = 0;
-            relaxedResults.forEach(exp => { if (exp._score > relaxedMax) relaxedMax = exp._score; });
-            relaxedResults = relaxedResults.filter(exp => exp._score === relaxedMax && relaxedMax > 0);
-            relaxedResults.sort((a, b) => b._score - a._score || a.name.localeCompare(b.name));
-            addMessage(
-                "Hmm. We weren't able to find an experience that matched all your filters, so we relaxed them a bit. Here are some options that might interest you, based on your major and/or remaining filters.",
-                "bot",
-                () => {
-                    showExperienceResultsList(relaxedResults, 0);
-                }
-            );
-        } else {
-            addMessage("No matches found, sorry. Try different filters?", "bot", () => {
-                setOptions([
-                    { label: "Try Different Filters", icon: "filter-line", onClick: () => {
-                        filterTopicIndex = 0;
-                        filterSelections = {};
-                        chatbotAskFilterTopic();
-                    }}
-                ]);
-            });
-        }
-        return;
-    }
-
-    // Sort finalResults by score descending, then by name for consistency
-    finalResults.sort((a, b) => b._score - a._score || a.name.localeCompare(b.name));
-
-    showExperienceResultsList(finalResults, 0);
-}
-
-function showExperienceResultsList(list, startIdx) {
-    // Hide filter tags when showing final results
+// --- Modify showExperienceResultsList to use new helpers and remove pagination logic for terms ---
+function showExperienceResultsList(list) { // Removed startIdx
     const tagArea = document.getElementById('chatbot-filter-tags');
     if (tagArea) tagArea.style.display = "none";
 
-    // Only show the "Based on your interests..." message ONCE, then show all results as a single message.
     if (!list || list.length === 0) {
-        chatbotShowOffices();
+        // This case should ideally be handled by the caller (chatbotShowResults)
+        // or we add a message here like "No specific experiences found."
+        chatbotShowOffices(); // Proceed to show offices anyway
         return;
     }
 
-    // Build clickable names for all results
-    const names = list.map(exp =>
-        `<span class="chatbot-def-term" data-exp-name="${encodeURIComponent(exp.name)}"><b>${exp.name.toLowerCase()}<i class="ri-information-fill chatbot-term-info"></i></b></span>`
-    );
-
-    let message = "";
-
-    // Pluralization rules
-    function pluralizeExperience(name, expName) {
-        expName = expName.toLowerCase();
-        if (expName === "research" || expName === "service learning") {
-            // No pluralization
-            return name;
-        }
-        if (expName === "practicum") {
-            // Plural is "practica"
-            return name.replace(/(<b>)(.*?)(<\/b>)/i, (_, open, inner, close) => `${open}practica${close}`);
-        }
-        // Default: add "s"
-        return name.replace(/(<b>)(.*?)(<\/b>)/i, (_, open, inner, close) => `${open}${inner}s${close}`);
-    }
-
-    if (names.length === 1) {
-        message = `Based on your responses, you might be interested in ${pluralizeExperience(names[0], list[0].name)}.`;
-    } else if (names.length === 2) {
-        message = `Based on your responses, you might be interested in ${pluralizeExperience(names[0], list[0].name)}, or ${pluralizeExperience(names[1], list[1].name)}.`;
-    } else {
-        const pluralNames = names.map((n, idx) => pluralizeExperience(n, list[idx].name));
-        const allButLast = pluralNames.slice(0, -1).join(" ");
-        const last = pluralNames[pluralNames.length - 1];
-        message = `Based on your responses, you might be interested in ${allButLast} or ${last}`;
-    }
+    // Standard intro for student flow (or if called directly without specific intro)
+    const intro = "Based on your responses, you might be interested in ";
+    const message = formatExperienceTermsMessage(list, intro);
 
     addMessage(message, "bot", () => {
-        const msgArea = document.getElementById('chatbot-messages');
-        if (!msgArea) return;
-        const terms = msgArea.querySelectorAll('.chatbot-def-term');
-        terms.forEach(term => {
-            term.style.cursor = "pointer";
-            term.title = "Tap to see definition";
-            term.onclick = function(e) {
-                const expName = decodeURIComponent(term.getAttribute('data-exp-name'));
-                const exp = experiences.find(x => x.name.toLowerCase() === expName.toLowerCase());
-                if (exp) {
-                    showInfoModal(exp.name, exp.description || "No additional information available.");
-                }
-            };
-        });
+        attachClickHandlersToTerms(experiences); // Pass the global experiences array
         chatbotShowOffices();
     });
 }
