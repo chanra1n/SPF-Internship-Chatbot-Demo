@@ -1044,9 +1044,11 @@ function showOfficesResultsList(list, startIdx, userTags) {
         setOptions([
             { label: "Search Again", icon: "search-line", onClick: () => {
                 chatbotStart();
+                unlockChatbotUI();
             }},
             { label: "Internship Hub", icon: "external-link-line", onClick: () => {
                 window.open("https://humboldt.edu/internships", "_blank");
+                unlockChatbotUI();
             }}
         ]);
         unlockChatbotUI();
