@@ -59,18 +59,10 @@
             "image": "images/career_development_center.png",
             "tags": [
                 "paid",
-                "career",
-                "Handshake",
-                "career fair",
-                "job fair",
-                "resume help",
-                "job applications",
-                "advising",
                 "internship",
                 "fellowship",
-                "event",
-                "job",
-                "academic year"
+                "academic year",
+                "summer"
             ]
         },
         {
@@ -82,13 +74,8 @@
                 "internship",
                 "service learning",
                 "practicum",
-                "course design",
-                "community engagement",
-                "S4 reporting",
-                "faculty support",
-                "student support",
-                "community partner",
-                "academic year"
+                "academic year",
+                "academic internship"
             ],
             "contactName": "CCBL Staff",
             "contactEmail": "ccbl@humboldt.edu"
@@ -99,14 +86,7 @@
             "link": "https://www.humboldt.edu/youth-educational-services",
             "image": "images/yes.jpg",
             "tags": [
-                "volunteer",
-                "leadership",
-                "community",
-                "service",
-                "event",
-                "cohort",
-                "scholarship",
-                "student-led",
+                "service learning",
                 "course credit",
                 "academic year",
                 "summer"
@@ -120,15 +100,9 @@
             "link": "https://www.humboldt.edu/ccbl/college-corps",
             "image": "images/cc.jpeg",
             "tags": [
-                "service",
+                "service learning",
                 "fellowship",
                 "paid",
-                "education",
-                "climate",
-                "food insecurity",
-                "community",
-                "career preparation",
-                "internship credit",
                 "academic year"
             ],
             "contactName": "College Corps Staff",
@@ -144,10 +118,7 @@
                 "fellowship",
                 "research",
                 "paid",
-                "internship",
-                "grant",
-                "external funding",
-                "dynamic"
+                "internship"
             ]
         },
         {
@@ -160,8 +131,6 @@
                 "research",
                 "on-campus",
                 "internship",
-                "scholarship",
-                "year-round",
                 "academic year",
                 "summer"
             ],
