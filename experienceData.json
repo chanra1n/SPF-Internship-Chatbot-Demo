@@ -71,7 +71,11 @@
                 "event",
                 "job",
                 "academic year"
-            ]
+            ],
+            "contactName": "Jane Doe",
+            "contactEmail": "careers@humboldt.edu",
+            "contactPhone": "(707) 826-3341",
+            "locationEmbed": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3154.123456789!2d-124.082123!3d40.875123!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x54d15c123456789:0xabcdef123456789!2sCareer%20Development%20Center!5e0!3m2!1sen!2sus!4v1710000000000!5m2!1sen!2sus"
         },
         {
             "name": "Center for Community Based Learning (CCBL)",
@@ -89,7 +93,10 @@
                 "student support",
                 "community partner",
                 "academic year"
-            ]
+            ],
+            "contactName": "John Smith",
+            "contactEmail": "ccbl@humboldt.edu",
+            "locationEmbed": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3154.987654321!2d-124.081234!3d40.876543!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x54d15c987654321:0xfedcba987654321!2sCCBL!5e0!3m2!1sen!2sus!4v1710000000001!5m2!1sen!2sus"
         },
         {
             "name": "Youth Educational Services (YES)",

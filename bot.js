@@ -983,19 +983,46 @@ function showOfficesResultsList(list, startIdx, userTags) {
         const matchedTags = (office.tags || []).filter(tag =>
             userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
         );
+
+        // --- New: Build contact/location section if present ---
+        let contactSection = '';
+        if (office.contactName || office.contactEmail || office.contactPhone) {
+            contactSection = `
+                <div class="chatbot-office-contact">
+                    ${office.contactName ? `<div class="contact-name"><i class="ri-user-3-line"></i> ${office.contactName}</div>` : ""}
+                    ${office.contactEmail ? `<div class="contact-email"><i class="ri-mail-line"></i> <a href="mailto:${office.contactEmail}">${office.contactEmail}</a></div>` : ""}
+                    ${office.contactPhone ? `<div class="contact-phone"><i class="ri-phone-line"></i> <a href="tel:${office.contactPhone.replace(/[^0-9+]/g, '')}">${office.contactPhone}</a></div>` : ""}
+                </div>
+            `;
+        }
+        let locationSection = '';
+        if (office.locationEmbed) {
+            locationSection = `
+                <div class="chatbot-office-location">
+                    <iframe src="${office.locationEmbed}" width="100%" height="120" style="border:0;border-radius:10px;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+            `;
+        }
+
+        // --- New: Arrange card with a flex layout: left = image, right = content (including contact/location) ---
         let msg = `
-            <div class="chatbot-office-card">
-                ${office.image ? `<img src="${office.image}" alt="${office.name}" class="chatbot-office-image">` : ""}
-                <div class="chatbot-office-content">
-                    <h2 class="chatbot-office-title">${office.name}</h2>
-                    <hr>
-                    <p>${summarizeInfo(office.description || office.info)}</p>
-                    ${office.link ? `<button class="chatbot-option-btn" onclick="window.open('${office.link}', '_blank')">Learn more <i class="ri-external-link-fill" style = "position: absolute;right: 1rem;font-size:1.2rem;"></i></button>` : ""}
-                    ${matchedTags.length > 0 ? `
-                        <div class="chatbot-office-tags">
-                            ${matchedTags.map(tag => `<span class="chatbot-office-tag">${tag}</span>`).join('')}
-                        </div>
-                    ` : ""}
+            <div class="chatbot-office-card-flex">
+                ${office.image ? `<div class="chatbot-office-image-wrap"><img src="${office.image}" alt="${office.name}" class="chatbot-office-image"></div>` : ""}
+                <div class="chatbot-office-main">
+                    <div class="chatbot-office-header">
+                        <h2 class="chatbot-office-title">${office.name}</h2>
+                    </div>
+                    <div class="chatbot-office-body">
+                        <p>${summarizeInfo(office.description || office.info)}</p>
+                        ${office.link ? `<button class="chatbot-option-btn" style = "margin-bottom:0rem;" onclick="window.open('${office.link}', '_blank')">Website<i class="ri-external-link-fill" style="position: absolute;right: 1rem;font-size:1.2rem;"></i></button>` : ""}
+                        ${contactSection}
+                        ${locationSection}
+                        ${matchedTags.length > 0 ? `
+                            <div class="chatbot-office-tags">
+                                ${matchedTags.map(tag => `<span class="chatbot-office-tag">${tag}</span>`).join('')}
+                            </div>
+                        ` : ""}
+                    </div>
                 </div>
             </div>
         `;
@@ -1012,19 +1039,16 @@ function showOfficesResultsList(list, startIdx, userTags) {
                 }
             }
         ]);
-        // Always unlock UI after rendering "Show More" options
         unlockChatbotUI();
     } else {
         setOptions([
             { label: "Search Again", icon: "search-line", onClick: () => {
-                // Properly reset and restart the chatbot flow.
                 chatbotStart();
             }},
             { label: "Internship Hub", icon: "external-link-line", onClick: () => {
                 window.open("https://humboldt.edu/internships", "_blank");
             }}
         ]);
-        // Unlock UI for these options as well
         unlockChatbotUI();
     }
 }

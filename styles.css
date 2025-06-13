@@ -184,7 +184,7 @@ body {
     box-shadow: var(--glass-shadow);
 }
 
-.chatbot-bubble b:not(.chatbot-office-card b):not(.chatbot-experience-card b) {
+.chatbot-bubble b:not(.chatbot-office-body b):not(.chatbot-experience-body b) {
     border-radius: 10px;
     margin-bottom: 0.25rem;
     display: inline-block;
@@ -628,7 +628,6 @@ body {
 
 .chatbot-office-image, .chatbot-experience-image {
     width: 100%;
-    max-height: 160px;
     object-fit: cover;
     display: block;
     margin: 0 auto 0.75em;
@@ -641,7 +640,7 @@ body {
 }
 
 .chatbot-office-tags, .chatbot-experience-tags {
-    margin: 0.75em 0 0.25em 0;
+    margin: 0px;
     display: flex;
     flex-wrap: wrap;
     gap: 0.5em;
@@ -670,6 +669,203 @@ body {
 .chatbot-office-card hr, .chatbot-experience-card hr {
     border: var(--glass-border);
     margin-bottom: -0.25rem;
+}
+
+/* --- Office Card Flex Layout --- */
+.chatbot-office-card-flex {
+    display: flex;
+    flex-direction: row;
+    gap: 1.2em;
+    align-items: stretch;
+    min-width: 0;
+}
+
+.chatbot-office-image-wrap {
+    flex: 0 0 90px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    background: var(--glass-tint-ocean);
+    min-height: 100%;
+    min-width: 0;
+    border-radius: 0px;
+    overflow: hidden;
+    margin: -1.25rem;
+    margin-bottom: 0.25rem;
+    position: relative;
+    border-bottom: var(--glass-border-strong);
+}
+
+.chatbot-office-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0px;
+    transform: scale(1.025);
+    display: block;
+    position: relative;
+    z-index: 1;
+    opacity: 50%;
+}
+
+/* Duotone gradient overlay */
+.chatbot-office-image-wrap::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    /* Example: teal to amber gradient, adjust as desired */
+    background: linear-gradient(135deg, var(--mist-medium) 0%, var(--pearl-soft) 50%, var(--mist-light) 100%);
+    opacity: 80%;
+    mix-blend-mode: multiply;
+    /* Try 'overlay' or 'color' for different effects */
+    border-radius: inherit;
+}
+
+/* Optional: make image grayscale for stronger duotone */
+.chatbot-office-image {
+    filter: grayscale(1) contrast(1.1) brightness(1.1);
+}
+
+.chatbot-office-main {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 0.7em 0.5em 0.7em 0;
+}
+
+.chatbot-office-header {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1em;
+    min-width: 0;
+    margin: -0.125rem;
+}
+
+.chatbot-office-title {
+    font-size: 1.25em;
+    font-weight: 700;
+    margin: 0;
+    color: var(--ocean-main);
+    flex: 1 1 0;
+    min-width: 0;
+    word-break: break-word;
+    margin-bottom: 0.25rem;
+}
+
+.chatbot-office-contact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25em;
+    font-size: 0.92em;
+    color: var(--ocean-deep);
+    min-width: 120px;
+    max-width: 180px;
+    margin-left: 0.5em;
+    flex: 0 0 auto;
+    background-color: var(--glass-tint-ocean);
+    padding: 0.75rem;
+    border-radius: 20px 20px 20px 0px;
+    width: 100%;
+}
+.chatbot-office-contact i {
+    color: var(--ocean-main);
+    margin-right: 0.3em;
+    font-size: 1em;
+    vertical-align: middle;
+}
+.chatbot-office-contact a {
+    color: var(--ocean-main);
+    text-decoration: underline dotted;
+    word-break: break-all;
+}
+.chatbot-office-contact .contact-name {
+    font-weight: 600;
+}
+.chatbot-office-contact .contact-email,
+.chatbot-office-contact .contact-phone {
+    font-weight: 400;
+}
+
+.chatbot-office-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    margin-bottom: -0.5rem;
+}
+
+.chatbot-office-body p {
+    margin: 0.25em 0;
+    font-size: 0.95em;
+    line-height: 1.4;
+    color: var(--ocean-deep);
+    border-top: var(--glass-border-strong);
+    border-bottom: var(--glass-border-strong);
+    border-radius: 20px;
+    padding: 0.75rem;
+    margin-left: -0.75rem;
+    margin-right: -0.75rem;
+}
+
+.chatbot-office-location {
+    margin-top: 0.25em;
+    width: 100%;
+    max-width: 260px;
+    min-width: 120px;
+    border-radius: 0px 20px 20px 20px;
+    overflow: hidden;
+    box-shadow: var(--glass-shadow-subtle);
+    align-self: flex-start;
+    background: var(--glass-surface-strong);
+    margin-bottom: 0.25rem;
+}
+
+.chatbot-office-location iframe {
+    border-radius: 0px!important;
+    height: 100%!important;
+}
+
+@media (max-width: 900px) {
+    .chatbot-office-card-flex {
+        flex-direction: column;
+        gap: 0.5em;
+        padding: 0.5em 0.2em;
+    }
+    .chatbot-office-image-wrap {
+        justify-content: flex-start;
+        min-width: 0;
+    }
+    .chatbot-office-main {
+        padding: 0.2em 0.5em 0.7em 0.5em;
+    }
+    .chatbot-office-header {
+    flex-direction: column;
+    gap: 0.5em;
+    }
+    .chatbot-office-contact {
+        margin-left: 0;
+        max-width: 100%;
+    }
+    .chatbot-office-location {
+        max-width: 100%;
+        min-width: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    .chatbot-office-card-flex {
+        flex-direction: column;
+        gap: 0.3em;
+        padding: 0.2em 0.1em;
+    }
+
+    .chatbot-office-main {
+        padding: 0.1em 0.2em 0.5em 0.2em;
+    }
 }
 
 /* Responsive styles */
@@ -1062,4 +1258,9 @@ body {
     padding: 1.5rem;
     font-size: 0.97em;
     }
+}
+
+.chatbot-office-card-flex hr, .chatbot-experience-card-flex hr {
+    border: var(--glass-border);
+    width: 100%;
 }
