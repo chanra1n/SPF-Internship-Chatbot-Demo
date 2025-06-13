@@ -1363,6 +1363,7 @@ body {
     border-bottom: var(--glass-border-strong);
     border-radius: 20px 20px 20px 0px;
     padding: 1rem;
+    margin-bottom: 1rem;
     background: var(--glass-tint-ocean);
 }
 
@@ -1370,6 +1371,7 @@ body {
     display: flex;
     flex-direction: column;
     width: 100%;
+    gap: 0.25em;
 }
 
 .chatbot-cover-btn {
@@ -1385,7 +1387,6 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5em;
     width: 100%;
     cursor: pointer;
 }
@@ -1405,24 +1406,9 @@ body {
 
 /* Desktop scaling for chatbot cover */
 @media (min-width: 900px) {
-    .chatbot-cover {
-        position: absolute;
-        left: 50%;
-        top: 50%;
-        width: 100%;
-        height: 100%;
-        min-width: 0;
-        min-height: 0;
-        transform: translate(-50%, -50%);
-        background: rgba(245,245,245,0.65);
-        border-radius: 20px;
-        box-shadow: 0 8px 32px rgba(0,77,64,0.10);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+
     .chatbot-cover-content {
-        max-width: 420px;
+        max-width: 40vw;
         width: 100%;
         border-radius: 20px;
         box-shadow: var(--glass-shadow-strong);
