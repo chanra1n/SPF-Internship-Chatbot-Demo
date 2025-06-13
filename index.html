@@ -10,6 +10,26 @@
 </head>
 <body>
     <div id="chatbot-container">
+        <!-- Glass cover overlay -->
+        <div id="chatbot-cover" class="chatbot-cover">
+            <div class="chatbot-cover-content">
+                <img src="images/logo.png" alt="Logo" class="chatbot-cover-logo">
+                <h1 class="chatbot-cover-title">Find a Learning Experience</h1>
+                <p class="chatbot-cover-desc">
+                    Discover internships, research, service learning, and more at Cal Poly Humboldt. Get personalized campus resources and opportunities in just a few clicks.
+                </p>
+                <div class="chatbot-cover-buttons">
+                    <button class="chatbot-option-btn chatbot-cover-btn" id="start-chat-btn">
+                        <span class="chatbot-btn-label">Start</span>
+                        <i class="ri-arrow-right-line" style="margin-left:0.5em"></i>
+                    </button>
+                    <button class="chatbot-option-btn chatbot-cover-btn" onclick="window.open('https://humboldt.edu/internships', '_blank')">
+                        <span class="chatbot-btn-label">Internship Hub</span>
+                        <i class="ri-external-link-line" style="margin-left:0.5em"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
         <div id="chatbot-header">
         <img src="images/logo.png" alt="Logo" class="chatbot-logo">
         <span class="chatbot-title">Find a Learning Experience</span>
@@ -79,6 +99,27 @@
     // Optional: allow clicking the handle to open if closed
     drawer.addEventListener('click', e => {
         if (drawer.classList.contains('closed') && e.target === handle) setDrawer(true);
+    });
+
+    // Cover overlay logic
+    document.addEventListener('DOMContentLoaded', function() {
+        var cover = document.getElementById('chatbot-cover');
+        var startBtn = document.getElementById('start-chat-btn');
+        if (cover && startBtn) {
+            startBtn.onclick = function() {
+                cover.style.display = 'none';
+                if (window.chatbotStart) chatbotStart();
+            };
+        }
+        // Optionally, hide chat UI until cover is dismissed
+        document.getElementById('chatbot-header').style.display = 'none';
+        document.getElementById('chatbot-messages').style.display = 'none';
+        document.getElementById('chatbot-options-drawer').style.display = 'none';
+        startBtn.addEventListener('click', function() {
+            document.getElementById('chatbot-header').style.display = '';
+            document.getElementById('chatbot-messages').style.display = '';
+            document.getElementById('chatbot-options-drawer').style.display = '';
+        });
     });
 
     window.scrollTo(0, 0); // Scroll to top on load
