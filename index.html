@@ -4,7 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Find a Learning Experience</title>
-    <link rel="stylesheet" href="styles.css?v=20240710">
+    <script>
+    // Cache-bust all local CSS/JS on every load (frontend only)
+    (function() {
+        var bust = Date.now();
+        // Bust CSS
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('link[rel="stylesheet"]').forEach(function(link) {
+                if (link.href && link.href.match(/^(?!https?:\/\/)/)) {
+                    link.href = link.href.replace(/\?.*$/, '') + '?v=' + bust;
+                }
+            });
+            // Bust JS
+            document.querySelectorAll('script[src]').forEach(function(script) {
+                if (script.src && script.src.match(/^(?!https?:\/\/)/)) {
+                    script.src = script.src.replace(/\?.*$/, '') + '?v=' + bust;
+                }
+            });
+        });
+    })();
+    </script>
+    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.css" integrity="sha512-kJlvECunwXftkPwyvHbclArO8wszgBGisiLeuDFwNM8ws+wKIw0sv1os3ClWZOcrEB2eRXULYUsm8OVRGJKwGA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
@@ -65,7 +85,7 @@
             <div id="chatbot-options"></div>
         </div>
     </div>
-<script src="bot.js?v=20240710"></script>
+<script src="bot.js"></script>
 <script>
     // Drawer open/close logic
     const drawer = document.getElementById('chatbot-options-drawer');
