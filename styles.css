@@ -428,8 +428,9 @@ body {
 }
 
 #chatbot-options-drawer.closed {
-    max-height: 40px;
+    max-height: 20px;
     overflow: hidden;
+    padding: 4px;
 }
 
 #chatbot-drawer-handle {
@@ -755,7 +756,7 @@ body {
     pointer-events: none;
     /* Example: teal to amber gradient, adjust as desired */
     background: linear-gradient(135deg, var(--mist-medium) 0%, var(--pearl-soft) 50%, var(--mist-light) 100%);
-    opacity: 80%;
+    opacity: 100%;
     mix-blend-mode: multiply;
     /* Try 'overlay' or 'color' for different effects */
     border-radius: inherit;
@@ -1343,7 +1344,7 @@ body {
 }
 
 .chatbot-cover-title {
-    font-size: 1.5em;
+    font-size: 1.25em;
     font-weight: 700;
     color: var(--ocean-main);
     margin: 0;
