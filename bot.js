@@ -598,10 +598,12 @@ function updatePersistentToolbar(topic) {
         topicsArr = genericFilterTopics;
     }
 
+    // --- NEW: Add a virtual "final" step after the last filter topic ---
+    const isFinalStep = filterTopicIndex === topicsArr.length;
     const shouldShow =
         typeof filterTopicIndex === 'number' &&
         filterTopicIndex >= 0 &&
-        filterTopicIndex < topicsArr.length;
+        filterTopicIndex <= topicsArr.length; // allow one step past last topic
 
     if (shouldShow) {
         toolbar.classList.add('show');
@@ -613,12 +615,55 @@ function updatePersistentToolbar(topic) {
 
     const btnBack = document.getElementById('chatbot-toolbar-back');
     const btnNext = document.getElementById('chatbot-toolbar-next');
+    const btnResults = document.getElementById('chatbot-toolbar-results');
+    const btnStartOver = document.getElementById('chatbot-toolbar-startover');
 
+    // --- NEW: On the final step, only show Back and Restart ---
+    if (isFinalStep) {
+        btnBack.style.display = filterTopicIndex > 0 ? '' : 'none';
+        btnNext.style.display = 'none';
+        btnResults.style.display = 'none';
+        btnStartOver.style.display = '';
+        btnBack.innerHTML = '';
+        btnBack.appendChild(makeBtnContent('Back', 'arrow-left-line', false));
+        btnBack.onclick = () => {
+            if (chatbotUILocked) return;
+            lockChatbotUI();
+            showLoadingOverlay();
+            setTimeout(() => {
+                filterTopicIndex--;
+                const prevTopic = topicsArr[filterTopicIndex];
+                // Remove last bot message (the "Show Results" step)
+                const msgArea = document.getElementById('chatbot-messages');
+                if (msgArea && msgArea.lastElementChild) {
+                    msgArea.removeChild(msgArea.lastElementChild);
+                }
+                queueMessage(prevTopic.label, "bot", () => {
+                    if (chatbotState.mode === "faculty" || chatbotState.mode === "community") {
+                        renderGenericFilterScreen(chatbotState.mode, prevTopic);
+                    } else {
+                        renderFilterScreen(prevTopic);
+                    }
+                    hideLoadingOverlay();
+                });
+            }, 500);
+        };
+        btnStartOver.onclick = () => {
+            if (chatbotUILocked) return;
+            lockChatbotUI();
+            chatbotStart();
+        };
+        return;
+    }
+
+    // --- Normal steps (not final) ---
     const showBack = filterTopicIndex > 0;
-    const showNext = filterTopicIndex < topicsArr.length - 1;
+    const showNext = filterTopicIndex < topicsArr.length;
 
     btnBack.style.display = showBack ? '' : 'none';
     btnNext.style.display = showNext ? '' : 'none';
+    btnResults.style.display = 'none'; // never show in toolbar
+    btnStartOver.style.display = '';
 
     btnBack.innerHTML = '';
     btnNext.innerHTML = '';
@@ -648,13 +693,13 @@ function updatePersistentToolbar(topic) {
         return wrapper;
     }
 
-    if (showBack && !showNext) {
-        btnBack.appendChild(makeBtnContent('Back', 'arrow-left-line', false)); // ARROW TEXT
+    if (showBack && showNext) {
+        btnBack.appendChild(makeBtnContent('Back', 'arrow-left-line', false));
+        btnNext.appendChild(makeBtnContent(nextLabel, 'arrow-right-line', true));
+    } else if (showBack && !showNext) {
+        btnBack.appendChild(makeBtnContent('Back', 'arrow-left-line', false));
     } else if (!showBack && showNext) {
-        btnNext.appendChild(makeBtnContent(nextLabel, 'arrow-right-line', true)); // TEXT ARROW
-    } else if (showNext) {
-        btnBack.appendChild(makeBtnContent('Back', 'arrow-left-line', false)); // ARROW TEXT
-        btnNext.appendChild(makeBtnContent(nextLabel, 'arrow-right-line', true)); // TEXT ARROW
+        btnNext.appendChild(makeBtnContent(nextLabel, 'arrow-right-line', true));
     }
 
     // Remove previous click handlers to avoid stacking
@@ -683,7 +728,6 @@ function updatePersistentToolbar(topic) {
                     msgArea.removeChild(msgArea.lastElementChild);
                 }
                 queueMessage(prevTopic.label, "bot", () => {
-                    // --- Use correct render function for mode ---
                     if (chatbotState.mode === "faculty" || chatbotState.mode === "community") {
                         renderGenericFilterScreen(chatbotState.mode, prevTopic);
                     } else {
@@ -708,21 +752,33 @@ function updatePersistentToolbar(topic) {
                 const opt = topic.options.find(o => o.value === sel);
                 return opt ? opt.label : sel;
             });
-            const nextBotLabel = topicsArr[filterTopicIndex + 1]?.label;
-            queueUserAndBotMessages(
-                userMsgs,
-                nextBotLabel,
-                () => {
-                    filterTopicIndex++;
-                    // --- Use correct render function for mode ---
-                    if (chatbotState.mode === "faculty" || chatbotState.mode === "community") {
-                        renderGenericFilterScreen(chatbotState.mode, topicsArr[filterTopicIndex]);
-                    } else {
-                        renderFilterScreen(topicsArr[filterTopicIndex]);
+            // If next is the final step, show the "Show Results" option set
+            if (filterTopicIndex + 1 === topicsArr.length) {
+                queueUserAndBotMessages(
+                    userMsgs,
+                    "Ready to see your results?",
+                    () => {
+                        filterTopicIndex++;
+                        renderShowResultsStep();
+                        hideLoadingOverlay();
                     }
-                    hideLoadingOverlay();
-                }
-            );
+                );
+            } else {
+                const nextBotLabel = topicsArr[filterTopicIndex + 1]?.label;
+                queueUserAndBotMessages(
+                    userMsgs,
+                    nextBotLabel,
+                    () => {
+                        filterTopicIndex++;
+                        if (chatbotState.mode === "faculty" || chatbotState.mode === "community") {
+                            renderGenericFilterScreen(chatbotState.mode, topicsArr[filterTopicIndex]);
+                        } else {
+                            renderFilterScreen(topicsArr[filterTopicIndex]);
+                        }
+                        hideLoadingOverlay();
+                    }
+                );
+            }
         }, 500);
     };
 
@@ -748,21 +804,32 @@ function updatePersistentToolbar(topic) {
                             const opt = topic.options.find(o => o.value === sel);
                             return opt ? opt.label : sel;
                         });
-                        const nextBotLabel = topicsArr[filterTopicIndex + 1]?.label;
-                        queueUserAndBotMessages(
-                            userMsgs,
-                            nextBotLabel,
-                            () => {
-                                filterTopicIndex++;
-                                // --- Use correct render function for mode ---
-                                if (chatbotState.mode === "faculty" || chatbotState.mode === "community") {
-                                    renderGenericFilterScreen(chatbotState.mode, topicsArr[filterTopicIndex]);
-                                } else {
-                                    renderFilterScreen(topicsArr[filterTopicIndex]);
+                        if (filterTopicIndex + 1 === topicsArr.length) {
+                            queueUserAndBotMessages(
+                                userMsgs,
+                                "Ready to see your results?",
+                                () => {
+                                    filterTopicIndex++;
+                                    renderShowResultsStep();
+                                    hideLoadingOverlay();
                                 }
-                                hideLoadingOverlay();
-                            }
-                        );
+                            );
+                        } else {
+                            const nextBotLabel = topicsArr[filterTopicIndex + 1]?.label;
+                            queueUserAndBotMessages(
+                                userMsgs,
+                                nextBotLabel,
+                                () => {
+                                    filterTopicIndex++;
+                                    if (chatbotState.mode === "faculty" || chatbotState.mode === "community") {
+                                        renderGenericFilterScreen(chatbotState.mode, topicsArr[filterTopicIndex]);
+                                    } else {
+                                        renderFilterScreen(topicsArr[filterTopicIndex]);
+                                    }
+                                    hideLoadingOverlay();
+                                }
+                            );
+                        }
                     }, 500);
                 };
             }, 10);
@@ -770,28 +837,65 @@ function updatePersistentToolbar(topic) {
         optArea.addEventListener('click', btnNext._labelUpdater);
     }
 
-    const btnResults = document.getElementById('chatbot-toolbar-results');
-    btnResults.style.display = filterTopicIndex === topicsArr.length - 1 ? '' : 'none';
-    btnResults.onclick = () => {
-        chatbotState.filters = Object.values(filterSelections).flat();
-        chatbotShowResults(chatbotState.filters);
-    };
-
-    // Add or remove the rainbow fill class for the "show results" button
-    if (filterTopicIndex === topicsArr.length - 1) {
-        btnResults.classList.add('rainbow-border');
-    } else {
-        btnResults.classList.remove('rainbow-border');
-    }
-
-    // Hide the restart button on the last step (when results button is shown)
-    const btnStartOver = document.getElementById('chatbot-toolbar-startover');
-    btnStartOver.style.display = filterTopicIndex === topicsArr.length - 1 ? 'none' : '';
     btnStartOver.onclick = () => {
         if (chatbotUILocked) return;
         lockChatbotUI();
         chatbotStart();
     };
+
+    // Helper for button content
+    function makeBtnContent(labelText, iconClass, arrowAfter = true) {
+        const label = document.createElement('span');
+        label.className = 'chatbot-btn-label';
+        label.textContent = labelText;
+        const icon = document.createElement('i');
+        icon.className = `ri-${iconClass}`;
+        icon.setAttribute('aria-hidden', 'true');
+        const wrapper = document.createElement('span');
+        wrapper.style.display = 'inline-flex';
+        wrapper.style.alignItems = 'center';
+        if (arrowAfter) {
+            label.style.marginRight = '0.5em';
+            wrapper.appendChild(label);
+            wrapper.appendChild(icon);
+        } else {
+            icon.style.marginRight = '0.5em';
+            wrapper.appendChild(icon);
+            wrapper.appendChild(label);
+        }
+        return wrapper;
+    }
+}
+
+function renderShowResultsStep() {
+    const optArea = document.getElementById('chatbot-options');
+    optArea.innerHTML = '';
+    showToolbar();
+    // Toolbar: show Back and Restart, hide Next and Results
+    const toolbar = document.getElementById('chatbot-toolbar');
+    if (toolbar) {
+        document.getElementById('chatbot-toolbar-back').style.display = filterTopicIndex > 0 ? '' : 'none';
+        document.getElementById('chatbot-toolbar-next').style.display = 'none';
+        document.getElementById('chatbot-toolbar-results').style.display = 'none';
+        document.getElementById('chatbot-toolbar-startover').style.display = '';
+    }
+    // Big "Show Results" button
+    const btn = document.createElement('button');
+    btn.className = 'chatbot-option-btn chatbot-show-results-btn';
+    btn.style.fontSize = '1em';
+    btn.style.padding = '1em';
+    btn.style.margin = 'auto';
+    btn.style.display = 'flex';
+    btn.innerHTML = `<span class="chatbot-btn-label">Show Results</span> <i class="ri-arrow-right-line"></i>`;
+    btn.onclick = () => {
+        chatbotState.filters = Object.values(filterSelections).flat();
+        if (chatbotState.mode === "faculty" || chatbotState.mode === "community") {
+            chatbotShowGenericResults(chatbotState.mode, chatbotState.filters);
+        } else {
+            chatbotShowResults(chatbotState.filters);
+        }
+    };
+    optArea.appendChild(btn);
 }
 
 // --- Add: Helper function to format experience terms into a single message string ---
