@@ -62,7 +62,8 @@
                 "internship",
                 "fellowship",
                 "academic year",
-                "summer"
+                "summer",
+                "off-campus"
             ]
         },
         {
@@ -75,7 +76,8 @@
                 "service learning",
                 "practicum",
                 "academic year",
-                "academic internship"
+                "academic internship",
+                "off-campus"
             ],
             "contactName": "CCBL Staff",
             "contactEmail": "ccbl@humboldt.edu"
@@ -89,7 +91,8 @@
                 "service learning",
                 "course credit",
                 "academic year",
-                "summer"
+                "summer",
+                "on-campus"
             ],
             "contactName": "Y.E.S. Staff",
             "contactEmail": "yes@humboldt.edu"

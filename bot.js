@@ -1381,30 +1381,40 @@ function renderFilterScreen(topic) {
     }, 0);
 }
 
-// --- Modify showExperienceResultsList to use new helpers and remove pagination logic for terms ---
-function showExperienceResultsList(list) { // Removed startIdx
-    const tagArea = document.getElementById('chatbot-filter-tags');
-    if (tagArea) tagArea.style.display = "none";
+// --- Add: Mutually exclusive/conflicting tag groups ---
+const CONFLICTING_TAG_GROUPS = [
+    ["on-campus", "off-campus"]
+    // Add more groups if needed
+];
 
-    if (!list || list.length === 0) {
-        // This case should ideally be handled by the caller (chatbotShowResults)
-        // or we add a message here like "No specific experiences found."
-        chatbotShowOffices(); // Proceed to show offices anyway
-        return;
-    }
-
-    // Standard intro for student flow (or if called directly without specific intro)
-    const intro = "Based on your responses, you might be interested in ";
-    const message = formatExperienceTermsMessage(list, intro);
-
-    addMessage(message, "bot", () => {
-        attachClickHandlersToTerms(experiences); // Pass the global experiences array
-        chatbotShowOffices();
+// --- Add: Helper to get all user-selected tags (lowercase) ---
+function getUserSelectedTags() {
+    let tags = [];
+    if (chatbotState.major) tags.push(chatbotState.major.toLowerCase());
+    Object.values(filterSelections).forEach(arr => {
+        arr.forEach(tag => tags.push(tag.toLowerCase()));
     });
+    return tags;
 }
 
+// --- Add: Helper to check if an office conflicts with user's exclusive choices ---
+function officeConflictsWithUser(office, userTags) {
+    for (const group of CONFLICTING_TAG_GROUPS) {
+        // Find which tags from this group the user selected
+        const userSelected = group.filter(tag => userTags.includes(tag));
+        if (userSelected.length === 1) {
+            // User picked one from this group, so offices with any other from this group are a conflict
+            const conflictingTags = group.filter(tag => tag !== userSelected[0]);
+            const officeTags = (office.tags || []).map(t => t.toLowerCase());
+            if (conflictingTags.some(tag => officeTags.includes(tag))) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
-// Modular function to show office results as cards with matched tags
+// --- Update showOfficesResultsList to use strict conflict logic ---
 function showOfficesResultsList(list, startIdx, userTags) {
     // Sort offices by number of matched tags (descending)
     const sortedList = [...list].sort((a, b) => {
@@ -1414,18 +1424,33 @@ function showOfficesResultsList(list, startIdx, userTags) {
         const bMatches = (b.tags || []).filter(tag =>
             userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
         ).length;
-        // Descending order: most matches first
         return bMatches - aMatches;
     });
 
     const endIdx = Math.min(startIdx + 2, sortedList.length);
+
+    // --- New: Detect if all shown offices have only 1 or 0 matching tags ---
+    let allLowMatch = true;
     for (let i = startIdx; i < endIdx; i++) {
         const office = sortedList[i];
-        // Find matching tags (case-insensitive)
         const matchedTags = (office.tags || []).filter(tag =>
             userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
         );
+        if (matchedTags.length > 1) {
+            allLowMatch = false;
+            break;
+        }
+    }
+    // If all cards have only 1 or 0 matching tags, and this is the first page, show a warning message
+    if (allLowMatch && startIdx === 0 && sortedList.length > 0) {
+        addMessage("They're not a complete match, but these also might work for you.", "bot");
+    }
 
+    for (let i = startIdx; i < endIdx; i++) {
+        const office = sortedList[i];
+        const matchedTags = (office.tags || []).filter(tag =>
+            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
+        );
         // --- New: Build contact/location section if present ---
         let contactSection = '';
         if (office.contactName || office.contactEmail || office.contactPhone) {
@@ -1446,7 +1471,6 @@ function showOfficesResultsList(list, startIdx, userTags) {
             `;
         }
 
-        // --- New: Arrange card with a flex layout: left = image, right = content (including contact/location) ---
         let msg = `
             <div class="chatbot-office-card-flex">
                 ${office.image ? `<div class="chatbot-office-image-wrap"><img src="${office.image}" alt="${office.name}" class="chatbot-office-image"></div>` : ""}
@@ -1506,16 +1530,67 @@ function showOfficesResultsList(list, startIdx, userTags) {
     }
 }
 
-// Update chatbotShowOffices to use the new card layout and tags
 function chatbotShowOffices() {
     hideToolbar();
-    addMessage("Here are some campus resources you may find helpful.", "bot", () => {
-        // Collect user tags from major and filters
-        let userTags = [];
-        if (chatbotState.major) userTags.push(chatbotState.major);
-        userTags = userTags.concat(Object.values(filterSelections).flat());
-        showOfficesResultsList(offices, 0, userTags);
+    let userTags = [];
+    if (chatbotState.major) userTags.push(chatbotState.major);
+    userTags = userTags.concat(Object.values(filterSelections).flat());
+
+    // Sort offices by number of matched tags (descending)
+    const sortedList = [...offices].sort((a, b) => {
+        const aMatches = (a.tags || []).filter(tag =>
+            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
+        ).length;
+        const bMatches = (b.tags || []).filter(tag =>
+            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
+        ).length;
+        return bMatches - aMatches;
     });
+
+    // Split into "good matches" (2+ tags) and "low matches" (1 or 0 tags)
+    const goodMatches = sortedList.filter(office => {
+        const matchedTags = (office.tags || []).filter(tag =>
+            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
+        );
+        return matchedTags.length > 1;
+    });
+    const lowMatches = sortedList.filter(office => {
+        const matchedTags = (office.tags || []).filter(tag =>
+            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
+        );
+        return matchedTags.length <= 1;
+    });
+
+    // Helper to show feedback button at the very end
+    function showFeedbackButton() {
+        queueMessage(
+            `<button class="chatbot-option-btn feedback-button" onclick="window.open('https://forms.gle/y3fC1q7sthgipkaFA', '_blank')">
+                Submit feedback <i class="ri-external-link-line" style="margin-left:0.5em;font-size:1em;"></i>
+            </button>`,
+            "bot"
+        );
+    }
+
+    // Show the best group(s) with appropriate intro(s)
+    if (goodMatches.length > 0) {
+        addMessage("Here are some campus resources you may find helpful.", "bot", () => {
+            showOfficesResultsList(goodMatches, 0, userTags, false, () => {
+                if (lowMatches.length > 0) {
+                    addMessage("They're not a complete match, but these might work for you.", "bot", () => {
+                        showOfficesResultsList(lowMatches, 0, userTags, true, showFeedbackButton);
+                    });
+                } else {
+                    showFeedbackButton();
+                }
+            });
+        });
+    } else if (lowMatches.length > 0) {
+        addMessage("They're not a complete match, but these might work for you.", "bot", () => {
+            showOfficesResultsList(lowMatches, 0, userTags, true, showFeedbackButton);
+        });
+    } else {
+        addMessage("No campus resources matched your selections. Try different filters?", "bot", showFeedbackButton);
+    }
 }
 
 // Utility: summarize description to 2 sentences max
@@ -1659,5 +1734,117 @@ function unlockChatbotUI() {
             btn.disabled = false;
             btn.classList.remove('chatbot-btn-locked');
         });
+    }
+}
+
+
+// --- Modify showExperienceResultsList to use new helpers and remove pagination logic for terms ---
+function showExperienceResultsList(list) { // Removed startIdx
+    const tagArea = document.getElementById('chatbot-filter-tags');
+    if (tagArea) tagArea.style.display = "none";
+
+    if (!list || list.length === 0) {
+        // This case should ideally be handled by the caller (chatbotShowResults)
+        // or we add a message here like "No specific experiences found."
+        chatbotShowOffices(); // Proceed to show offices anyway
+        return;
+    }
+
+    // Standard intro for student flow (or if called directly without specific intro)
+    const intro = "Based on your responses, you might be interested in ";
+    const message = formatExperienceTermsMessage(list, intro);
+
+    addMessage(message, "bot", () => {
+        attachClickHandlersToTerms(experiences); // Pass the global experiences array
+        chatbotShowOffices();
+    });
+}
+function showOfficesResultsList(list, startIdx, userTags, skipIntro = false, onDone) {
+    // Sort offices by number of matched tags (descending)
+    const sortedList = [...list].sort((a, b) => {
+        const aMatches = (a.tags || []).filter(tag =>
+            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
+        ).length;
+        const bMatches = (b.tags || []).filter(tag =>
+            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
+        ).length;
+        return bMatches - aMatches;
+    });
+
+    const PAGE_SIZE = 2;
+    const endIdx = Math.min(startIdx + PAGE_SIZE, sortedList.length);
+
+    for (let i = startIdx; i < endIdx; i++) {
+        const office = sortedList[i];
+        const matchedTags = (office.tags || []).filter(tag =>
+            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
+        );
+        let contactSection = '';
+        if (office.contactName || office.contactEmail || office.contactPhone) {
+            contactSection = `
+                <div class="chatbot-office-contact">
+                    ${office.contactName ? `<div class="contact-name"><i class="ri-user-3-line"></i> ${office.contactName}</div>` : ""}
+                    ${office.contactEmail ? `<div class="contact-email"><i class="ri-mail-line"></i> <a href="mailto:${office.contactEmail}">${office.contactEmail}</a></div>` : ""}
+                    ${office.contactPhone ? `<div class="contact-phone"><i class="ri-phone-line"></i> <a href="tel:${office.contactPhone.replace(/[^0-9+]/g, '')}">${office.contactPhone}</a></div>` : ""}
+                </div>
+            `;
+        }
+        let locationSection = '';
+        if (office.locationEmbed) {
+            locationSection = `
+                <div class="chatbot-office-location">
+                    <iframe src="${office.locationEmbed}" width="100%" height="120" style="border:0;border-radius:10px;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                </div>
+            `;
+        }
+
+        let msg = `
+            <div class="chatbot-office-card-flex">
+                ${office.image ? `<div class="chatbot-office-image-wrap"><img src="${office.image}" alt="${office.name}" class="chatbot-office-image"></div>` : ""}
+                <div class="chatbot-office-main">
+                    <div class="chatbot-office-header">
+                        <h2 class="chatbot-office-title">${office.name}</h2>
+                    </div>
+                    <div class="chatbot-office-body">
+                        <p>${summarizeInfo(office.description || office.info)}</p>
+                        ${office.link ? `<button class="chatbot-option-btn" style = "margin-bottom:0rem;" onclick="window.open('${office.link}', '_blank')">Website<i class="ri-external-link-fill" style="position: absolute;right: 1rem;font-size:1.2rem;"></i></button>` : ""}
+                        ${contactSection}
+                        ${locationSection}
+                        ${matchedTags.length > 0 ? `
+                            <div class="chatbot-office-tags">
+                                ${matchedTags.map(tag => `<span class="chatbot-office-tag">${tag}</span>`).join('')}
+                            </div>
+                        ` : ""}
+                    </div>
+                </div>
+            </div>
+        `;
+        addMessage(msg, "bot");
+    }
+    if (endIdx < sortedList.length) {
+        setOptions([
+            {
+                label: "Show More",
+                icon: "arrow-down-line",
+                onClick: () => {
+                    setOptions([]);
+                    showOfficesResultsList(sortedList, endIdx, userTags, skipIntro, onDone);
+                }
+            }
+        ]);
+        unlockChatbotUI();
+    } else {
+        setOptions([
+            { label: "Search Again", icon: "search-line", onClick: () => {
+                chatbotStart();
+                unlockChatbotUI();
+            }},
+            { label: "Internship Hub", icon: "external-link-line", onClick: () => {
+                window.open("https://humboldt.edu/internships", "_blank");
+                unlockChatbotUI();
+            }}
+        ]);
+        unlockChatbotUI();
+        if (typeof onDone === "function") onDone();
     }
 }
