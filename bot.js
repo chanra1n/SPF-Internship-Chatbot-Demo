@@ -1381,77 +1381,51 @@ function renderFilterScreen(topic) {
     }, 0);
 }
 
-// --- Add: Mutually exclusive/conflicting tag groups ---
-const CONFLICTING_TAG_GROUPS = [
-    ["on-campus", "off-campus"]
-    // Add more groups if needed
-];
+// --- Tag Weights: Make any tag more important by increasing its value here ---
+// Example: 'service learning': 5 means matches on this tag count 5x more than normal
+const TAG_WEIGHTS = {
+    'service learning': 5, // CCBL should be prioritized for this
+    'ccbl': 4,            // Direct CCBL tag
+    'internship': 2,      // Example: internships are more important
+    'paid': 2,          // Paid opportunities are more important
+    // Add more tags and weights as needed
+};
 
-// --- Add: Helper to get all user-selected tags (lowercase) ---
-function getUserSelectedTags() {
-    let tags = [];
-    if (chatbotState.major) tags.push(chatbotState.major.toLowerCase());
-    Object.values(filterSelections).forEach(arr => {
-        arr.forEach(tag => tags.push(tag.toLowerCase()));
-    });
-    return tags;
+// Helper: Get tag weight (default 1)
+function getTagWeight(tag) {
+    return TAG_WEIGHTS[tag.toLowerCase()] || 1;
 }
 
-// --- Add: Helper to check if an office conflicts with user's exclusive choices ---
-function officeConflictsWithUser(office, userTags) {
-    for (const group of CONFLICTING_TAG_GROUPS) {
-        // Find which tags from this group the user selected
-        const userSelected = group.filter(tag => userTags.includes(tag));
-        if (userSelected.length === 1) {
-            // User picked one from this group, so offices with any other from this group are a conflict
-            const conflictingTags = group.filter(tag => tag !== userSelected[0]);
-            const officeTags = (office.tags || []).map(t => t.toLowerCase());
-            if (conflictingTags.some(tag => officeTags.includes(tag))) {
-                return true;
+// Helper: Calculate weighted tag match score for an office
+function getOfficeWeightedScore(office, userTags) {
+    let score = 0;
+    (office.tags || []).forEach(tag => {
+        userTags.forEach(userTag => {
+            if (tag.toLowerCase() === userTag.toLowerCase()) {
+                score += getTagWeight(tag);
             }
-        }
-    }
-    return false;
+        });
+    });
+    return score;
 }
 
-// --- Update showOfficesResultsList to use strict conflict logic ---
-function showOfficesResultsList(list, startIdx, userTags) {
-    // Sort offices by number of matched tags (descending)
+// --- Update showOfficesResultsList to use weighted scores ---
+function showOfficesResultsList(list, startIdx, userTags, skipIntro = false, onDone) {
+    // Sort offices by weighted score (descending)
     const sortedList = [...list].sort((a, b) => {
-        const aMatches = (a.tags || []).filter(tag =>
-            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
-        ).length;
-        const bMatches = (b.tags || []).filter(tag =>
-            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
-        ).length;
-        return bMatches - aMatches;
+        const aScore = getOfficeWeightedScore(a, userTags);
+        const bScore = getOfficeWeightedScore(b, userTags);
+        return bScore - aScore;
     });
 
-    const endIdx = Math.min(startIdx + 2, sortedList.length);
-
-    // --- New: Detect if all shown offices have only 1 or 0 matching tags ---
-    let allLowMatch = true;
-    for (let i = startIdx; i < endIdx; i++) {
-        const office = sortedList[i];
-        const matchedTags = (office.tags || []).filter(tag =>
-            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
-        );
-        if (matchedTags.length > 1) {
-            allLowMatch = false;
-            break;
-        }
-    }
-    // If all cards have only 1 or 0 matching tags, and this is the first page, show a warning message
-    if (allLowMatch && startIdx === 0 && sortedList.length > 0) {
-        addMessage("They're not a complete match, but these also might work for you.", "bot");
-    }
+    const PAGE_SIZE = 2;
+    const endIdx = Math.min(startIdx + PAGE_SIZE, sortedList.length);
 
     for (let i = startIdx; i < endIdx; i++) {
         const office = sortedList[i];
         const matchedTags = (office.tags || []).filter(tag =>
             userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
         );
-        // --- New: Build contact/location section if present ---
         let contactSection = '';
         if (office.contactName || office.contactEmail || office.contactPhone) {
             contactSection = `
@@ -1501,7 +1475,7 @@ function showOfficesResultsList(list, startIdx, userTags) {
                 icon: "arrow-down-line",
                 onClick: () => {
                     setOptions([]);
-                    showOfficesResultsList(sortedList, endIdx, userTags);
+                    showOfficesResultsList(sortedList, endIdx, userTags, skipIntro, onDone);
                 }
             }
         ]);
@@ -1518,48 +1492,27 @@ function showOfficesResultsList(list, startIdx, userTags) {
             }}
         ]);
         unlockChatbotUI();
-        // --- Add feedback button as a final message ---
-        setTimeout(() => {
-            queueMessage(
-                `<button class="chatbot-option-btn feedback-button" onclick="window.open('https://forms.gle/y3fC1q7sthgipkaFA', '_blank')">
-                    Submit feedback <i class="ri-external-link-line" style="margin-left:0.5em;font-size:1em;"></i>
-                </button>`,
-                "bot"
-            );
-        }, 400);
+        if (typeof onDone === "function") onDone();
     }
 }
 
+// --- Update chatbotShowOffices to use weighted scores for splitting good/low matches ---
 function chatbotShowOffices() {
     hideToolbar();
     let userTags = [];
     if (chatbotState.major) userTags.push(chatbotState.major);
     userTags = userTags.concat(Object.values(filterSelections).flat());
 
-    // Sort offices by number of matched tags (descending)
+    // Sort offices by weighted score (descending)
     const sortedList = [...offices].sort((a, b) => {
-        const aMatches = (a.tags || []).filter(tag =>
-            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
-        ).length;
-        const bMatches = (b.tags || []).filter(tag =>
-            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
-        ).length;
-        return bMatches - aMatches;
+        const aScore = getOfficeWeightedScore(a, userTags);
+        const bScore = getOfficeWeightedScore(b, userTags);
+        return bScore - aScore;
     });
 
-    // Split into "good matches" (2+ tags) and "low matches" (1 or 0 tags)
-    const goodMatches = sortedList.filter(office => {
-        const matchedTags = (office.tags || []).filter(tag =>
-            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
-        );
-        return matchedTags.length > 1;
-    });
-    const lowMatches = sortedList.filter(office => {
-        const matchedTags = (office.tags || []).filter(tag =>
-            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
-        );
-        return matchedTags.length <= 1;
-    });
+    // Split into "good matches" (score >= 2) and "low matches" (score < 2)
+    const goodMatches = sortedList.filter(office => getOfficeWeightedScore(office, userTags) >= 2);
+    const lowMatches = sortedList.filter(office => getOfficeWeightedScore(office, userTags) < 2);
 
     // Helper to show feedback button at the very end
     function showFeedbackButton() {
@@ -1760,15 +1713,11 @@ function showExperienceResultsList(list) { // Removed startIdx
     });
 }
 function showOfficesResultsList(list, startIdx, userTags, skipIntro = false, onDone) {
-    // Sort offices by number of matched tags (descending)
+    // Sort offices by weighted score (descending)
     const sortedList = [...list].sort((a, b) => {
-        const aMatches = (a.tags || []).filter(tag =>
-            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
-        ).length;
-        const bMatches = (b.tags || []).filter(tag =>
-            userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
-        ).length;
-        return bMatches - aMatches;
+        const aScore = getOfficeWeightedScore(a, userTags);
+        const bScore = getOfficeWeightedScore(b, userTags);
+        return bScore - aScore;
     });
 
     const PAGE_SIZE = 2;
@@ -1848,3 +1797,5 @@ function showOfficesResultsList(list, startIdx, userTags, skipIntro = false, onD
         if (typeof onDone === "function") onDone();
     }
 }
+
+// --- Modular: To make any tag more important, just add it to TAG_WEIGHTS above. ---
