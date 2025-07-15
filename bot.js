@@ -1433,6 +1433,7 @@ function showOfficesResultsList(list, startIdx, userTags, skipIntro = false, onD
                     ${office.contactName ? `<div class="contact-name"><i class="ri-user-3-line"></i> ${office.contactName}</div>` : ""}
                     ${office.contactEmail ? `<div class="contact-email"><i class="ri-mail-line"></i> <a href="mailto:${office.contactEmail}">${office.contactEmail}</a></div>` : ""}
                     ${office.contactPhone ? `<div class="contact-phone"><i class="ri-phone-line"></i> <a href="tel:${office.contactPhone.replace(/[^0-9+]/g, '')}">${office.contactPhone}</a></div>` : ""}
+                    ${office.contactLocation ? `<div class="contact-location"><i class="ri-map-pin-line"></i> ${office.contactLocation}</div>` : ""}
                 </div>
             `;
         }
@@ -1735,6 +1736,7 @@ function showOfficesResultsList(list, startIdx, userTags, skipIntro = false, onD
                     ${office.contactName ? `<div class="contact-name"><i class="ri-user-3-line"></i> ${office.contactName}</div>` : ""}
                     ${office.contactEmail ? `<div class="contact-email"><i class="ri-mail-line"></i> <a href="mailto:${office.contactEmail}">${office.contactEmail}</a></div>` : ""}
                     ${office.contactPhone ? `<div class="contact-phone"><i class="ri-phone-line"></i> <a href="tel:${office.contactPhone.replace(/[^0-9+]/g, '')}">${office.contactPhone}</a></div>` : ""}
+                    ${office.contactLocation ? `<div class="contact-location"><i class="ri-map-pin-line"></i> ${office.contactLocation}</div>` : ""}
                 </div>
             `;
         }

@@ -80,7 +80,10 @@
                 "off-campus"
             ],
             "contactName": "CCBL Staff",
-            "contactEmail": "ccbl@humboldt.edu"
+            "contactPhone": "(707)-826-4960",
+            "contactEmail": "ccbl@humboldt.edu",
+            "contactLocation": "Lower Library 026",
+            "locationEmbed": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3016.7889587768937!2d-124.0801692!3d40.876505400000006!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x54d1576d52a99eb7%3A0xe8b83d269133cc91!2sCal%20Poly%20Humboldt%20Library!5e0!3m2!1sen!2sus!4v1749797667063!5m2!1sen!2sus"
         },
         {
             "name": "Youth Educational Services (YES)",
@@ -111,7 +114,9 @@
             ],
             "contactName": "College Corps Staff",
             "contactPhone": "(707)-826-4961",
-            "contactEmail": "collegecorps@humboldt.edu"
+            "contactEmail": "collegecorps@humboldt.edu",
+            "contactLocation": "Lower Library 028",
+            "locationEmbed": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3016.7889587768937!2d-124.0801692!3d40.876505400000006!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x54d1576d52a99eb7%3A0xe8b83d269133cc91!2sCal%20Poly%20Humboldt%20Library!5e0!3m2!1sen!2sus!4v1749797667063!5m2!1sen!2sus"
         },
         {
             "name": "SPF Engagement Hub",
@@ -123,7 +128,10 @@
                 "research",
                 "paid",
                 "internship"
-            ]
+            ],
+            "contactName": "Cara Peters",
+            "contactEmail": "cap924@humboldt.edu",
+            "contactPhone": "(707)-826-5153"
         },
         {
             "name": "Cal Poly Humboldt Library",
