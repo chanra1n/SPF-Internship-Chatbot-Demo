@@ -909,7 +909,7 @@ function renderShowResultsStep() {
 function showAdvisorBanner() {
     const banner = document.getElementById('chatbot-advisor-banner');
     if (banner) {
-        banner.style.display = 'block';
+        banner.style.display = 'flex';
     }
 }
 
