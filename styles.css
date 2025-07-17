@@ -106,6 +106,41 @@ body {
     min-height: 64px;
 }
 
+/* Advisor banner styling */
+.chatbot-advisor-banner {
+    position: sticky;
+    top: 64px;
+    z-index: 100;
+    background: var(--amber-warm);
+    color: var(--pearl-white);
+    padding: 0.75rem;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.75rem;
+    border-bottom: 2px solid var(--amber-glow);
+    box-shadow: 0 2px 8px rgba(255, 143, 0, 0.15);
+    overflow: hidden;
+    align-items: center;
+}
+
+.chatbot-advisor-banner-text {
+    display: inline-block;
+    white-space: nowrap;
+    animation: marquee 20s linear infinite;
+}
+
+@keyframes marquee {
+    0% {
+        transform: translateX(0);
+    }
+    10% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
 .chatbot-logo {
     width: 20px;
     height: 20px;
@@ -217,13 +252,28 @@ body {
 
 .chatbot-bubble b:not(.chatbot-office-body b):not(.chatbot-experience-body b) {
     border-radius: 10px;
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.125rem;
+    margin-top: 0.125rem;
     display: inline-block;
     background: var(--glass-surface);
     border: var(--glass-border);
     padding-left: 0.4rem;
     padding-right: 0.4rem;
     position: relative;
+    margin-right: 0.25rem;
+}
+
+.chatbot-bubble b2 {
+    font-weight: bolder;
+    border-radius: 10px;
+    display: inline-block;
+    background: var(--glass-surface);
+    border: var(--glass-border);
+    padding-left: 0.4rem;
+    padding-right: 0.4rem;
+    position: relative;
+    margin-top: 0.125rem;
+    margin-bottom: 0.125rem;
     margin-right: 0.25rem;
 }
 
