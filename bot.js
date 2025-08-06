@@ -290,7 +290,7 @@ function setOptions(options) {
     const container = document.createElement('div');
     container.style.display = 'flex';
     container.style.flexDirection = 'column';
-    container.style.gap = '0.5em'; // This is now the gap between rows
+    container.style.gap = '0em'; // This is now the gap between rows
     container.style.padding = '0px 0.75em';
 
     // Set a character limit to determine if a button is "long"
@@ -310,13 +310,12 @@ function setOptions(options) {
             iconCircle.appendChild(icon);
             btn.appendChild(iconCircle);
         }
+        
         const labelSpan = document.createElement('span');
         labelSpan.className = 'chatbot-btn-label';
         labelSpan.textContent = opt.label;
-        if (opt.icon) {
-            labelSpan.style.marginLeft = '0.5em';
-        }
         btn.appendChild(labelSpan);
+
         btn.onclick = () => {
             if (chatbotUILocked) return;
             const isShowMore = typeof opt.label === "string" && (
@@ -340,38 +339,45 @@ function setOptions(options) {
 
         const opt1 = options[i];
         const isOpt1Long = opt1.label.length > LONG_BUTTON_CHAR_LIMIT;
+        const hasOpt1Width = opt1.width === 'full' || opt1.width === 'half';
 
-        if (isOpt1Long) {
-            // Option 1 is long, so it gets its own row
+        if (opt1.width === 'full' || (!hasOpt1Width && isOpt1Long)) {
+            // Full-width button (forced or long)
             const btn1 = createButton(opt1, i);
-            btn1.style.flex = '1'; // Take full width of the row
-            btn1.style.marginBottom = '0px'; // Add bottom margin for spacing
+            btn1.style.width = '100%';
             row.appendChild(btn1);
             i++;
         } else {
-            // Option 1 is short, check the next option
-            const opt2 = options[i + 1];
-            const isOpt2Long = !opt2 || opt2.label.length > LONG_BUTTON_CHAR_LIMIT;
+            // Half-width or auto-sized short button
+            const btn1 = createButton(opt1, i);
+            i++;
 
-            if (opt2 && !isOpt2Long) {
-                // Option 2 exists and is also short, pair them up
-                const btn1 = createButton(opt1, i);
-                btn1.style.flex = '1'; // Each takes half of the space
-                btn1.style.marginBottom = '0px'; // Add bottom margin for spacing
-                row.appendChild(btn1);
+            if (i < options.length) {
+                const opt2 = options[i];
+                const isOpt2Long = opt2.label.length > LONG_BUTTON_CHAR_LIMIT;
+                const hasOpt2Width = opt2.width === 'full' || opt2.width === 'half';
 
-                const btn2 = createButton(opt2, i + 1);
-                btn2.style.flex = '1';
-                btn2.style.marginBottom = '0px'; // Add bottom margin for spacing
-                row.appendChild(btn2);
-                i += 2;
+                // Pair if:
+                // - opt1 is forced half AND opt2 is forced half
+                // - opt1 is auto-short AND opt2 is auto-short
+                const canPair = (opt1.width === 'half' && opt2.width === 'half') || (!hasOpt1Width && !hasOpt2Width && !isOpt1Long && !isOpt2Long);
+
+                if (canPair) {
+                    const btn2 = createButton(opt2, i);
+                    btn1.style.width = 'calc(50% - 0.25em)';
+                    btn2.style.width = 'calc(50% - 0.25em)';
+                    row.appendChild(btn1);
+                    row.appendChild(btn2);
+                    i++;
+                } else {
+                    // Cannot pair, so btn1 gets its own row
+                    btn1.style.width = '100%';
+                    row.appendChild(btn1);
+                }
             } else {
-                // Option 2 is long or doesn't exist, so Option 1 gets its own row
-                const btn1 = createButton(opt1, i);
-                btn1.style.flex = '1'; // Take full width of the row
-                btn1.style.marginBottom = '0px'; // Add bottom margin for spacing
+                // Last button, takes the full row
+                btn1.style.width = '100%';
                 row.appendChild(btn1);
-                i++;
             }
         }
 
@@ -1622,11 +1628,11 @@ function showOfficesResultsList(list, startIdx, userTags, onDone) {
             unlockChatbotUI();
         } else {
             setOptions([
-                { label: "Search Again", icon: "search-line", onClick: () => {
+                { label: "Search Again", icon: "search-line", width: "full", onClick: () => {
                     chatbotStart();
                     unlockChatbotUI();
                 }},
-                { label: "Internship Hub", icon: "external-link-line", onClick: () => {
+                { label: "Internship Hub", icon: "external-link-line", width: "full", onClick: () => {
                     window.open("https://humboldt.edu/internships", "_blank");
                     unlockChatbotUI();
                 }}
