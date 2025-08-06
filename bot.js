@@ -221,7 +221,7 @@ function addMessageImmediate(text, sender = "bot", cb) {
                     bubble.textContent = text.slice(0, i);
                     scrollMessagesToBottom();
                     i++;
-                    setTimeout(typeChar, text.length > 60 ? 8 : 18);
+                    setTimeout(typeChar, text.length > 60 ? 9 : 15);
                 }
             } else if (cb) {
                 cb();
@@ -624,7 +624,7 @@ function renderStaticMajorButtons(container) {
             }
         },
         { 
-            label: "Skip", 
+            label: "Skip this", 
             icon: "arrow-right-s-line",
             onClick: () => {
                 queueMessage("Just show me everything.", "user", () => {
@@ -655,7 +655,7 @@ function renderStaticMajorButtons(container) {
             icon.className = `ri-${opt.icon}`;
             
             // For the skip button, put the icon after the label.
-            if (opt.label === "Skip") {
+            if (opt.label === "Skip this") {
                 btn.appendChild(labelSpan);
                 btn.appendChild(icon);
             } else {
@@ -1840,45 +1840,112 @@ function summarizeInfo(info) {
 }
 
 // Add a loading overlay inside the options container if not present
+// --- Loading overlay with blur and spinner, but only blur the content, not the overlay itself ---
 function ensureLoadingOverlay() {
     const optionsDrawer = document.getElementById('chatbot-options-drawer');
     if (!optionsDrawer) return;
     if (!document.getElementById('chatbot-loading-overlay')) {
-        const overlay = document.createElement('div');
-        overlay.id = 'chatbot-loading-overlay';
-        overlay.style.position = 'absolute';
-        overlay.style.top = '0';
-        overlay.style.left = '0';
-        overlay.style.width = '100%';
-        overlay.style.height = '100%';
-        overlay.style.background = 'transparent';
-        overlay.style.backdropFilter = 'blur(20px)';
-        overlay.style.display = 'none';
-        overlay.style.zIndex = '999';
-        overlay.style.pointerEvents = 'all';
-        overlay.style.justifyContent = 'center';
-        overlay.style.alignItems = 'center';
-        overlay.style.display = 'none';
-        overlay.style.transition = 'opacity 0.2s';
-        overlay.innerHTML = `<div style="font-size:2rem;color:#00695c;display:flex;align-items:center;gap:0.7em;">
-            <span class="ri-loader-4-line" style="animation:spin 1s linear infinite;"></span>
-        </div>
-        <style>
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        </style>`;
+        // Create overlay container
+        const overlayContainer = document.createElement('div');
+        overlayContainer.id = 'chatbot-loading-overlay';
+        overlayContainer.style.position = 'absolute';
+        overlayContainer.style.top = '0';
+        overlayContainer.style.left = '0';
+        overlayContainer.style.width = '100%';
+        overlayContainer.style.height = '100%';
+        overlayContainer.style.display = 'none';
+        overlayContainer.style.zIndex = '1000';
+        overlayContainer.style.pointerEvents = 'all';
+        overlayContainer.style.borderRadius = '0 0 1rem 1rem';
+        overlayContainer.style.overflow = 'hidden';
+        overlayContainer.style.opacity = '0';
+        overlayContainer.style.transition = 'opacity 0.25s cubic-bezier(.4,0,.2,1)';
+
+        // Spinner layer (on top, NOT blurred)
+        const spinnerLayer = document.createElement('div');
+        spinnerLayer.style.position = 'absolute';
+        spinnerLayer.style.top = '0';
+        spinnerLayer.style.left = '0';
+        spinnerLayer.style.width = '100%';
+        spinnerLayer.style.height = '100%';
+        spinnerLayer.style.display = 'flex';
+        spinnerLayer.style.justifyContent = 'center';
+        spinnerLayer.style.alignItems = 'center';
+        spinnerLayer.style.zIndex = '1002';
+        spinnerLayer.style.background = 'rgba(255,255,255,0.1)';
+        spinnerLayer.innerHTML = `
+            <div class="chatbot-loading-spinner-wrap" style="font-size:2rem;color:#00695c;display:flex;align-items:center;gap:0.7em;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+                <span class="ri-loader-4-line chatbot-loading-spinner" style="opacity:0;transform:scale(0.85);animation:spin 1s linear infinite;"></span>
+            </div>
+        `;
+
+        overlayContainer.appendChild(spinnerLayer);
+
         optionsDrawer.style.position = 'relative';
-        optionsDrawer.appendChild(overlay);
+        optionsDrawer.appendChild(overlayContainer);
+
+        // Add CSS for spinner animation and blur effect if not present
+        if (!document.getElementById('loading-overlay-styles')) {
+            const styles = document.createElement('style');
+            styles.id = 'loading-overlay-styles';
+            styles.textContent = `
+                @keyframes spin { 
+                    0% { transform: rotate(0deg); } 
+                    100% { transform: rotate(360deg); } 
+                }
+                #chatbot-options-drawer.loading-blur > *:not(#chatbot-loading-overlay) {
+                    filter: blur(15px) !important;
+                    -webkit-filter: blur(15px) !important;
+                    pointer-events: none !important;
+                    user-select: none !important;
+                }
+                .chatbot-loading-spinner {
+                    transition: opacity 0.25s cubic-bezier(.4,0,.2,1), transform 0.25s cubic-bezier(.4,0,.2,1);
+                }
+            `;
+            document.head.appendChild(styles);
+        }
     }
 }
 
 function showLoadingOverlay() {
     ensureLoadingOverlay();
     const overlay = document.getElementById('chatbot-loading-overlay');
-    if (overlay) overlay.style.display = 'flex';
+    const optionsDrawer = document.getElementById('chatbot-options-drawer');
+    if (overlay && optionsDrawer) {
+        overlay.style.display = 'block';
+        // Add blur class to options drawer
+        optionsDrawer.classList.add('loading-blur');
+        // Fade in overlay
+        setTimeout(() => {
+            overlay.style.opacity = '1';
+            // Animate spinner in
+            const spinner = overlay.querySelector('.chatbot-loading-spinner');
+            if (spinner) {
+                spinner.style.opacity = '1';
+                spinner.style.transform = 'scale(1)';
+            }
+        }, 10);
+    }
 }
 function hideLoadingOverlay() {
     const overlay = document.getElementById('chatbot-loading-overlay');
-    if (overlay) overlay.style.display = 'none';
+    const optionsDrawer = document.getElementById('chatbot-options-drawer');
+    if (overlay && optionsDrawer) {
+        // Animate spinner out
+        const spinner = overlay.querySelector('.chatbot-loading-spinner');
+        if (spinner) {
+            spinner.style.opacity = '0';
+            spinner.style.transform = 'scale(0.85)';
+        }
+        // Fade out overlay after spinner animation
+        overlay.style.opacity = '0';
+        // Remove blur class after fade out and then hide overlay
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            optionsDrawer.classList.remove('loading-blur');
+        }, 250); // Wait for the opacity transition to finish
+    }
 }
 
 // Start chatbot on page load

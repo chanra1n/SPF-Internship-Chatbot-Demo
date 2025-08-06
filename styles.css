@@ -205,7 +205,7 @@ body {
 }
 
 .chatbot-msg {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -481,6 +481,7 @@ body {
     border: var(--glass-border-strong);
     max-width: max-content;
     padding: 0.5rem 1rem;
+    font-size: 0.9rem;
 }
 
 .chatbot-option-btn.selected {
