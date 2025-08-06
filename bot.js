@@ -282,91 +282,113 @@ if (sender === "bot") {
 function setOptions(options) {
     const optArea = document.getElementById('chatbot-options');
     optArea.innerHTML = '';
-    // Group options into columns if there are many
-    const colCount = options.length > 6 ? 2 : 1;
-    if (colCount === 1) {
-        options.forEach((opt, idx) => {
-            const btn = document.createElement('button');
-            btn.className = 'chatbot-option-btn';
-            if (opt.icon) {
-                const iconCircle = document.createElement('div');
-                iconCircle.className = 'chatbot-btn-icon-circle';
-                const icon = document.createElement('i');
-                icon.className = `ri-${opt.icon}`;
-                icon.setAttribute('aria-hidden', 'true');
-                iconCircle.appendChild(icon);
-                btn.appendChild(iconCircle);
+
+    // --- Overhauled button layout logic ---
+    // This logic groups buttons into rows. Long buttons get their own row.
+    // Short buttons are paired up, two per row.
+    // A single remaining short button will take a full row.
+    const container = document.createElement('div');
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.gap = '0.5em'; // This is now the gap between rows
+    container.style.padding = '0px 0.75em';
+
+    // Set a character limit to determine if a button is "long"
+    const LONG_BUTTON_CHAR_LIMIT = 22;
+
+    // Helper function to create a button element to keep the code DRY
+    const createButton = (opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'chatbot-option-btn';
+
+        if (opt.icon) {
+            const iconCircle = document.createElement('div');
+            iconCircle.className = 'chatbot-btn-icon-circle';
+            const icon = document.createElement('i');
+            icon.className = `ri-${opt.icon}`;
+            icon.setAttribute('aria-hidden', 'true');
+            iconCircle.appendChild(icon);
+            btn.appendChild(iconCircle);
+        }
+        const labelSpan = document.createElement('span');
+        labelSpan.className = 'chatbot-btn-label';
+        labelSpan.textContent = opt.label;
+        if (opt.icon) {
+            labelSpan.style.marginLeft = '0.5em';
+        }
+        btn.appendChild(labelSpan);
+        btn.onclick = () => {
+            if (chatbotUILocked) return;
+            const isShowMore = typeof opt.label === "string" && (
+                opt.label.toLowerCase().includes("show more") ||
+                opt.label.toLowerCase().includes("load more")
+            );
+            if (!isShowMore) lockChatbotUI();
+            opt.onClick();
+        };
+        btn.style.animationDelay = (0.08 * idx) + 's';
+        btn.style.opacity = '0'; // Start transparent for animation
+        return btn;
+    };
+
+    let i = 0;
+    while (i < options.length) {
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.gap = '0.5em'; // Gap between buttons in a row
+        row.style.width = '100%';
+
+        const opt1 = options[i];
+        const isOpt1Long = opt1.label.length > LONG_BUTTON_CHAR_LIMIT;
+
+        if (isOpt1Long) {
+            // Option 1 is long, so it gets its own row
+            const btn1 = createButton(opt1, i);
+            btn1.style.flex = '1'; // Take full width of the row
+            btn1.style.marginBottom = '0px'; // Add bottom margin for spacing
+            row.appendChild(btn1);
+            i++;
+        } else {
+            // Option 1 is short, check the next option
+            const opt2 = options[i + 1];
+            const isOpt2Long = !opt2 || opt2.label.length > LONG_BUTTON_CHAR_LIMIT;
+
+            if (opt2 && !isOpt2Long) {
+                // Option 2 exists and is also short, pair them up
+                const btn1 = createButton(opt1, i);
+                btn1.style.flex = '1'; // Each takes half of the space
+                btn1.style.marginBottom = '0px'; // Add bottom margin for spacing
+                row.appendChild(btn1);
+
+                const btn2 = createButton(opt2, i + 1);
+                btn2.style.flex = '1';
+                btn2.style.marginBottom = '0px'; // Add bottom margin for spacing
+                row.appendChild(btn2);
+                i += 2;
+            } else {
+                // Option 2 is long or doesn't exist, so Option 1 gets its own row
+                const btn1 = createButton(opt1, i);
+                btn1.style.flex = '1'; // Take full width of the row
+                btn1.style.marginBottom = '0px'; // Add bottom margin for spacing
+                row.appendChild(btn1);
+                i++;
             }
-            const labelSpan = document.createElement('span');
-            labelSpan.className = 'chatbot-btn-label';
-            labelSpan.textContent = opt.label;
-            btn.appendChild(labelSpan);
-            btn.onclick = () => {
-                // Only lock UI if the option is NOT a "Show More" or similar "load more" button
-                if (chatbotUILocked) return;
-                // Detect "Show More" or similar by label or a property
-                const isShowMore = typeof opt.label === "string" && (
-                    opt.label.toLowerCase().includes("show more") ||
-                    opt.label.toLowerCase().includes("load more")
-                );
-                if (!isShowMore) lockChatbotUI();
-                opt.onClick();
-            };
-            btn.style.animationDelay = (0.08 * idx) + 's';
-            optArea.appendChild(btn);
-            void btn.offsetWidth;
-            btn.style.opacity = '';
-        });
-    } else {
-        // Use a flex row with two columns for many options
-        const colWrap = document.createElement('div');
-        colWrap.style.display = "flex";
-        colWrap.style.width = "100%";
-        colWrap.style.gap = "0.5em";
-        colWrap.style.justifyContent = "center";
-        const col1 = document.createElement('div');
-        const col2 = document.createElement('div');
-        col1.style.flex = col2.style.flex = "1 1 0";
-        col1.style.display = col2.style.display = "flex";
-        col1.style.flexDirection = col2.style.flexDirection = "column";
-        col1.style.gap = col2.style.gap = "0em";
-        col1.style.marginBottom = col2.style.marginBottom = "-0.5em";
-        options.forEach((opt, idx) => {
-            const btn = document.createElement('button');
-            btn.className = 'chatbot-option-btn';
-            if (opt.icon) {
-                const iconCircle = document.createElement('div');
-                iconCircle.className = 'chatbot-btn-icon-circle';
-                const icon = document.createElement('i');
-                icon.className = `ri-${opt.icon}`;
-                icon.setAttribute('aria-hidden', 'true');
-                iconCircle.appendChild(icon);
-                btn.appendChild(iconCircle);
-            }
-            const labelSpan = document.createElement('span');
-            labelSpan.className = 'chatbot-btn-label';
-            labelSpan.textContent = opt.label;
-            btn.appendChild(labelSpan);
-            btn.onclick = () => {
-                if (chatbotUILocked) return;
-                const isShowMore = typeof opt.label === "string" && (
-                    opt.label.toLowerCase().includes("show more") ||
-                    opt.label.toLowerCase().includes("load more")
-                );
-                if (!isShowMore) lockChatbotUI();
-                opt.onClick();
-            };
-            btn.style.animationDelay = (0.08 * idx) + 's';
-            void btn.offsetWidth;
-            btn.style.opacity = '';
-            (idx % 2 === 0 ? col1 : col2).appendChild(btn);
-        });
-        colWrap.appendChild(col1);
-        colWrap.appendChild(col2);
-        optArea.appendChild(colWrap);
+        }
+
+        container.appendChild(row);
     }
-    // After rendering, always scroll options to top and messages to bottom
-    setTimeout(scrollOptionsToTop, 0);
+
+    optArea.appendChild(container);
+
+    // After appending, trigger the fade-in animation and scroll
+    setTimeout(() => {
+        const allButtons = container.querySelectorAll('.chatbot-option-btn');
+        allButtons.forEach(btn => {
+            void btn.offsetWidth; // Trigger reflow
+            btn.style.opacity = '1';
+        });
+        scrollOptionsToTop();
+    }, 0);
 }
 
 // Observe changes to messages/options and auto-scroll as needed
@@ -405,8 +427,8 @@ async function chatbotStart() {
     queueMessage("Opportunity awaits! To begin, let's get to know you a bit.", "bot", () => {
         setOptions([
             { label: "I'm a Student", icon: "user-line", onClick: () => chatbotChooseMode("student") },
-            { label: "I'm Faculty / Staff", icon: "user-2-line", onClick: () => chatbotChooseMode("faculty") },
-            { label: "I'm a Community Partner", icon: "group-2-line", onClick: () => chatbotChooseMode("community") }
+            // { label: "I'm Faculty / Staff", icon: "user-2-line", onClick: () => chatbotChooseMode("faculty") },
+            // { label: "I'm a Community Partner", icon: "group-2-line", onClick: () => chatbotChooseMode("community") }
         ]);
     });
 }
@@ -440,13 +462,47 @@ function chatbotStudentFlowStart() {
     filterSelections = {};
     showFilterTags();
     hideToolbar();
-    queueMessage("Alright. What's your major?", "bot", () => {
-        setOptions(
-            majors.map(m => ({
-                label: m,
-                onClick: () => chatbotSetMajor(m)
-            }))
-        );
+    queueMessage("Alright. Some programs have major-specific internship courses for students. You can explore the major-specific experiences or search all opportunities.", "bot", () => {
+        const studentMajors = [
+            "Anthropology", "Art", "Biology", "Business Administration", "Cannabis Studies", 
+            "Child Development", "Computer Science", "Critical Race Gender and Sexuality", 
+            "Economics", "English", "Environmental Science and Management", "Fire Science", 
+            "Forestry", "French", "Geospatial Analysis", "History", 
+            "Journalism and Mass Communication", "Kinesiology", "Political Science", 
+            "Recreation Administration", "Sociology"
+        ];
+        const options = studentMajors.map(m => ({
+            label: m,
+            onClick: () => chatbotSetMajor(m)
+        }));
+        options.push({
+            label: "Major not listed",
+            onClick: () => {
+                // This is different from chatbotSetMajor(null) because we want to add a user message
+                chatbotState.major = null;
+                queueMessage("Major not listed", "user", () => {
+                    filterTopicIndex = 0;
+                    filterSelections = {};
+                    chatbotState.filters = [];
+                    showFilterTags();
+                    chatbotAskFilterTopic();
+                });
+            }
+        });
+        options.push({
+            label: "Show me everything",
+            onClick: () => {
+                chatbotState.major = null;
+                queueMessage("Show me everything", "user", () => {
+                    filterTopicIndex = 0;
+                    filterSelections = {};
+                    chatbotState.filters = [];
+                    showFilterTags();
+                    chatbotAskFilterTopic();
+                });
+            }
+        });
+        setOptions(options);
     });
 }
 
@@ -909,7 +965,7 @@ function renderShowResultsStep() {
 function showAdvisorBanner() {
     const banner = document.getElementById('chatbot-advisor-banner');
     if (banner) {
-        banner.style.display = 'block';
+        banner.style.display = 'flex';
     }
 }
 
@@ -1229,8 +1285,7 @@ const filterTopics = [
         options: [
             { label: "Internships", icon: "briefcase-line", value: "internship" },
             { label: "Research", icon: "flask-line", value: "research" },
-            { label: "Service Learning", icon: "service-line", value: "service learning" },
-            { label: "Job Shadowing", icon: "eye-line", value: "shadowing" }
+            { label: "Service Learning", icon: "service-line", value: "service learning" }
         ]
     },
     {
@@ -1274,8 +1329,7 @@ const genericFilterTopics = [
         options: [
             { label: "Internships", icon: "briefcase-line", value: "internship" },
             { label: "Research", icon: "flask-line", value: "research" },
-            { label: "Service Learning", icon: "service-line", value: "service learning" },
-            { label: "Job Shadowing", icon: "eye-line", value: "shadowing" }
+            { label: "Service Learning", icon: "service-line", value: "service learning" }
         ]
     },
     {
@@ -1417,10 +1471,10 @@ function renderFilterScreen(topic) {
 // --- Tag Weights: Make any tag more important by increasing its value here ---
 // Example: 'service learning': 5 means matches on this tag count 5x more than normal
 const TAG_WEIGHTS = {
-    'service learning': 5, // CCBL should be prioritized for this
-    'ccbl': 4,            // Direct CCBL tag
-    'internship': 2,      // Example: internships are more important
-    'paid': 2,          // Paid opportunities are more important
+    'internship': 3,      // Example: internships are more important
+    'paid': 3,          // Paid opportunities are more important
+    'on-campus': 2,
+    'academic year': 2,
     // Add more tags and weights as needed
 };
 
