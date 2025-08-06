@@ -146,7 +146,7 @@ function scrollOptionsToTop() {
 // --- Message queue with delay between bubbles ---
 let messageQueue = [];
 let isMessageProcessing = false;
-const MESSAGE_DELAY = 750; // ms between bubbles
+const MESSAGE_DELAY = 800; // ms between bubbles
 
 function queueMessage(text, sender = "bot", cb) {
     messageQueue.push({ text, sender, cb });
@@ -221,7 +221,7 @@ function addMessageImmediate(text, sender = "bot", cb) {
                     bubble.textContent = text.slice(0, i);
                     scrollMessagesToBottom();
                     i++;
-                    setTimeout(typeChar, text.length > 60 ? 9 : 15);
+                    setTimeout(typeChar, 12);
                 }
             } else if (cb) {
                 cb();
@@ -263,7 +263,7 @@ if (sender === "bot") {
                 bubble.textContent = text.slice(0, i);
                 scrollMessagesToBottom();
                 i++;
-                setTimeout(typeChar, text.length > 60 ? 8 : 18);
+                setTimeout(typeChar, text.length > 60 ? 9 : 20);
             }
         } else if (cb) {
             cb();
@@ -278,29 +278,60 @@ if (sender === "bot") {
     setTimeout(scrollMessagesToBottom, 100);
 }
 
+// --- Animation Utilities ---
+function animateIn(element, className = 'animate-in') {
+    if (!element) return;
+    element.classList.remove('animate-out');
+    element.classList.add(className);
+    element.style.display = '';
+    // Remove the class after animation completes to allow re-trigger
+    element.addEventListener('animationend', function handler() {
+        element.classList.remove(className);
+        element.removeEventListener('animationend', handler);
+    });
+}
+function animateOut(element, className = 'animate-out') {
+    if (!element) return;
+    element.classList.remove('animate-in');
+    element.classList.add(className);
+    element.addEventListener('animationend', function handler() {
+        element.style.display = 'none';
+        element.classList.remove(className);
+        element.removeEventListener('animationend', handler);
+    });
+}
+
 // Helper to set options
 function setOptions(options) {
     const optArea = document.getElementById('chatbot-options');
+    if (!optArea) return;
+    
+    // Clear existing content first
     optArea.innerHTML = '';
+    
+    // Show or hide the options drawer based on options
+    if (options && options.length > 0) {
+        showOptionsDrawer();
+        // Don't animate if we're just updating content
+        if (optArea.style.display === 'none') {
+            animateIn(optArea);
+        }
+    } else {
+        animateOut(optArea);
+        hideOptionsDrawer();
+        return; // Exit early if no options to show
+    }
 
     // --- Overhauled button layout logic ---
-    // This logic groups buttons into rows. Long buttons get their own row.
-    // Short buttons are paired up, two per row.
-    // A single remaining short button will take a full row.
     const container = document.createElement('div');
-    container.style.display = 'flex';
-    container.style.flexDirection = 'column';
-    container.style.gap = '0em'; // This is now the gap between rows
-    container.style.padding = '0px 0.75em';
+    container.className = 'chatbot-options-btn-container';
 
-    // Set a character limit to determine if a button is "long"
     const LONG_BUTTON_CHAR_LIMIT = 22;
-
-    // Helper function to create a button element to keep the code DRY
     const createButton = (opt, idx) => {
         const btn = document.createElement('button');
         btn.className = 'chatbot-option-btn';
-
+        btn.style.opacity = '0';
+        btn.style.transform = 'translateY(20px)';
         if (opt.icon) {
             const iconCircle = document.createElement('div');
             iconCircle.className = 'chatbot-btn-icon-circle';
@@ -310,12 +341,10 @@ function setOptions(options) {
             iconCircle.appendChild(icon);
             btn.appendChild(iconCircle);
         }
-        
         const labelSpan = document.createElement('span');
         labelSpan.className = 'chatbot-btn-label';
         labelSpan.textContent = opt.label;
         btn.appendChild(labelSpan);
-
         btn.onclick = () => {
             if (chatbotUILocked) return;
             const isShowMore = typeof opt.label === "string" && (
@@ -325,44 +354,36 @@ function setOptions(options) {
             if (!isShowMore) lockChatbotUI();
             opt.onClick();
         };
-        btn.style.animationDelay = (0.08 * idx) + 's';
-        btn.style.opacity = '0'; // Start transparent for animation
+        // Animate in with stagger
+        setTimeout(() => {
+            btn.style.opacity = '1';
+            btn.style.transform = 'translateY(0)';
+            btn.style.transition = 'opacity 0.35s var(--fluid-ease), transform 0.35s var(--fluid-ease)';
+        }, 40 + idx * 60);
         return btn;
     };
-
     let i = 0;
     while (i < options.length) {
         const row = document.createElement('div');
         row.style.display = 'flex';
-        row.style.gap = '0.5em'; // Gap between buttons in a row
+        row.style.gap = '0.5em';
         row.style.width = '100%';
-
         const opt1 = options[i];
         const isOpt1Long = opt1.label.length > LONG_BUTTON_CHAR_LIMIT;
         const hasOpt1Width = opt1.width === 'full' || opt1.width === 'half';
-
         if (opt1.width === 'full' || (!hasOpt1Width && isOpt1Long)) {
-            // Full-width button (forced or long)
             const btn1 = createButton(opt1, i);
             btn1.style.width = '100%';
             row.appendChild(btn1);
             i++;
         } else {
-            // Half-width or auto-sized short button
             const btn1 = createButton(opt1, i);
             i++;
-
             if (i < options.length) {
                 const opt2 = options[i];
                 const isOpt2Long = opt2.label.length > LONG_BUTTON_CHAR_LIMIT;
                 const hasOpt2Width = opt2.width === 'full' || opt2.width === 'half';
-
-                // Pair if:
-                // - opt1 is forced half AND opt2 is forced half
-                // - opt1 is auto-short AND opt2 is auto-short
-                // A single remaining short button will take a full row.
                 const canPair = (opt1.width === 'half' && opt2.width === 'half') || (!hasOpt1Width && !hasOpt2Width && !isOpt1Long && !isOpt2Long);
-
                 if (canPair) {
                     const btn2 = createButton(opt2, i);
                     btn1.style.width = 'calc(50% - 0.25em)';
@@ -371,31 +392,20 @@ function setOptions(options) {
                     row.appendChild(btn2);
                     i++;
                 } else {
-                    // Cannot pair, so btn1 gets its own row
                     btn1.style.width = '100%';
                     row.appendChild(btn1);
                 }
             } else {
-                // Last button, takes the full row
                 btn1.style.width = '100%';
                 row.appendChild(btn1);
             }
         }
-
         container.appendChild(row);
     }
-
     optArea.appendChild(container);
-
-    // After appending, trigger the fade-in animation and scroll
-    setTimeout(() => {
-        const allButtons = container.querySelectorAll('.chatbot-option-btn');
-        allButtons.forEach(btn => {
-            void btn.offsetWidth; // Trigger reflow
-            btn.style.opacity = '1';
-        });
-        scrollOptionsToTop();
-    }, 0);
+    // Only animate in if options are present
+    if (options && options.length > 0) animateIn(optArea);
+    scrollOptionsToTop();
 }
 
 // Observe changes to messages/options and auto-scroll as needed
@@ -477,59 +487,47 @@ function chatbotStudentFlowStart() {
 
 function setupMajorSearch() {
     const optArea = document.getElementById('chatbot-options');
-    optArea.innerHTML = ''; // Clear existing options
-
-    // Use a class to switch to flex layout, and remove parent padding
+    optArea.innerHTML = '';
     optArea.className = 'chatbot-options major-search-active';
-
     // Create a scrollable container for search input and results
     const scrollableContainer = document.createElement('div');
     scrollableContainer.className = 'major-search-scroll-area';
-
     // Container for the search input (this will be sticky)
     const searchContainer = document.createElement('div');
     searchContainer.className = 'chatbot-major-search-container';
-    
+    searchContainer.style.opacity = '0';
+    searchContainer.style.transform = 'translateY(20px)';
     const searchIcon = document.createElement('i');
     searchIcon.className = 'ri-search-line';
     searchContainer.appendChild(searchIcon);
-
     const input = document.createElement('input');
     input.type = 'text';
     input.placeholder = 'Search for your major...';
     input.className = 'chatbot-major-search-input';
     searchContainer.appendChild(input);
-    
-    // The search container now goes directly into the scrollable area
     scrollableContainer.appendChild(searchContainer);
-
     // Container for major results
     const resultsContainer = document.createElement('div');
     resultsContainer.id = 'major-results';
     resultsContainer.className = 'chatbot-major-results';
+    resultsContainer.style.opacity = '0';
+    resultsContainer.style.transform = 'translateY(20px)';
     scrollableContainer.appendChild(resultsContainer);
-
     optArea.appendChild(scrollableContainer);
-
     // Container for the static buttons below (the fixed part)
     const staticButtonsContainer = document.createElement('div');
     staticButtonsContainer.className = 'chatbot-major-static-buttons';
+    staticButtonsContainer.style.opacity = '0';
+    staticButtonsContainer.style.transform = 'translateY(20px)';
     optArea.appendChild(staticButtonsContainer);
-
-    // Animate the search UI components
-    const animatedElements = [searchContainer, resultsContainer, staticButtonsContainer];
-    animatedElements.forEach((el, idx) => {
-        el.style.opacity = '0';
-        el.style.animation = `bubbleFloat 0.6s var(--fluid-ease) forwards`;
-        el.style.animationDelay = `${0.1 * (idx + 1)}s`;
-    });
-
+    // Animate in the search UI components only after they are in the DOM
     setTimeout(() => {
-        animatedElements.forEach(el => {
+        [searchContainer, resultsContainer, staticButtonsContainer].forEach((el, idx) => {
+            el.style.transition = 'opacity 0.35s var(--fluid-ease), transform 0.35s var(--fluid-ease)';
             el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
         });
     }, 10);
-
     const studentMajorsWithLinks = [
         { name: "Anthropology", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=74677" },
         { name: "Art", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=74747" },
@@ -583,11 +581,13 @@ function renderMajorResults(majors, container) {
         majorLink.style.animation = 'none'; // Disable entry animation for search results
         majorLink.style.opacity = '1';
 
-        // Allow the link to navigate directly.
-        // The class is removed so the UI is correct if the user navigates back.
+        // On click, clear the options area so static buttons are not left behind
         majorLink.addEventListener('click', () => {
             const optArea = document.getElementById('chatbot-options');
-            if (optArea) optArea.classList.remove('major-search-active');
+            if (optArea) {
+                optArea.innerHTML = '';
+                optArea.classList.remove('major-search-active');
+            }
         });
 
         const majorName = document.createElement('span');
@@ -1219,14 +1219,13 @@ function chatbotShowResults(filters) {
     hideToolbar();
     chatbotState.filters = filters;
     showFilterTags();
-
+    showOptionsDrawer();
     const msgArea = document.getElementById('chatbot-messages');
     if (msgArea) {
         msgArea.innerHTML = '';
         // Scroll to top immediately after clearing messages
         scrollMessagesToTop();
     }
-
     // Add advisor banner at the top
     showAdvisorBanner();
 
@@ -1318,7 +1317,7 @@ function chatbotShowGenericResults(role, filters) {
     hideToolbar();
     chatbotState.filters = filters;
     showFilterTags();
-
+    showOptionsDrawer();
     const msgArea = document.getElementById('chatbot-messages');
     if (msgArea) {
         msgArea.innerHTML = '';
@@ -1462,7 +1461,7 @@ const filterTopics = [
         label: "Do you prefer paid or unpaid opportunities?",
         options: [
             { label: "Paid", icon: "money-dollar-circle-line", value: "paid" },
-            { label: "Unpaid", icon: "close-circle-line", value: "not paid" }
+            { label: "Unpaid", icon: "close-circle-line", value: "unpaid" }
         ]
     },
     {
@@ -1506,7 +1505,7 @@ const genericFilterTopics = [
         label: "Will this opportunity be paid or unpaid?",
         options: [
             { label: "Paid", icon: "money-dollar-circle-line", value: "paid" },
-            { label: "Unpaid", icon: "close-circle-line", value: "not paid" }
+            { label: "Unpaid", icon: "close-circle-line", value: "unpaid" }
         ]
     },
     {
@@ -1671,6 +1670,7 @@ function getOfficeWeightedScore(office, userTags) {
 // --- Update chatbotShowOffices to use weighted scores and new narrative flow ---
 function chatbotShowOffices() {
     hideToolbar();
+    showOptionsDrawer();
     
     let userTags = [];
     if (chatbotState.major) userTags.push(chatbotState.major);
@@ -1687,14 +1687,27 @@ function chatbotShowOffices() {
     const goodMatches = sortedList.filter(office => getOfficeWeightedScore(office, userTags) >= 2);
     const lowMatches = sortedList.filter(office => getOfficeWeightedScore(office, userTags) < 2);
 
-    // Helper to show feedback button at the very end
-    function showFeedbackButton() {
-        queueMessage(
-            `<button class="chatbot-option-btn feedback-button" onclick="window.open('https://forms.gle/y3fC1q7sthgipkaFA', '_blank')">
-                Submit feedback <i class="ri-external-link-line" style="margin-left:0.5em;font-size:1em;"></i>
-            </button>`,
-            "bot"
-        );
+    // Helper to show final options including feedback
+    function showFinalOptions() {
+        setTimeout(() => {
+            setOptions([
+                { label: "Search Again", icon: "search-line", width: "full", onClick: () => {
+                    chatbotStart();
+                }},
+                { label: "Internship Hub", icon: "external-link-line", width: "full", onClick: () => {
+                    window.open("https://humboldt.edu/internships", "_blank");
+                }}
+            ]);
+            // Add feedback as a message after setting the options
+            setTimeout(() => {
+                queueMessage(
+                    `<button class="chatbot-option-btn feedback-button" onclick="window.open('https://forms.gle/y3fC1q7sthgipkaFA', '_blank')">
+                        Submit feedback <i class="ri-external-link-line" style="margin-left:0.5em;font-size:1em;"></i>
+                    </button>`,
+                    "bot"
+                );
+            }, 200);
+        }, 100);
     }
 
     // Show the best group(s) with the new narrative flow
@@ -1702,15 +1715,15 @@ function chatbotShowOffices() {
         showOfficesResultsList(goodMatches, 0, userTags, () => {
             if (lowMatches.length > 0) {
                 // The intro for low matches is now handled inside the next call
-                showOfficesResultsList(lowMatches, 0, userTags, showFeedbackButton);
+                showOfficesResultsList(lowMatches, 0, userTags, showFinalOptions);
             } else {
-                showFeedbackButton();
+                showFinalOptions();
             }
         });
     } else if (lowMatches.length > 0) {
-        showOfficesResultsList(lowMatches, 0, userTags, showFeedbackButton);
+        showOfficesResultsList(lowMatches, 0, userTags, showFinalOptions);
     } else {
-        addMessage("No campus resources matched your selections. Try different filters?", "bot", showFeedbackButton);
+        addMessage("No campus resources matched your selections. Try different filters?", "bot", showFinalOptions);
     }
 }
 
@@ -1784,25 +1797,20 @@ function showOfficesResultsList(list, startIdx, userTags, onDone) {
                     label: "Show More",
                     icon: "arrow-down-line",
                     onClick: () => {
-                        setOptions([]);
-                        showOfficesResultsList(sortedList, endIdx, userTags, onDone);
+                        // Add a small delay to ensure smooth transition
+                        setTimeout(() => {
+                            showOfficesResultsList(sortedList, endIdx, userTags, onDone);
+                        }, 50);
                     }
                 }
             ]);
             unlockChatbotUI();
         } else {
-            setOptions([
-                { label: "Search Again", icon: "search-line", width: "full", onClick: () => {
-                    chatbotStart();
-                    unlockChatbotUI();
-                }},
-                { label: "Internship Hub", icon: "external-link-line", width: "full", onClick: () => {
-                    window.open("https://humboldt.edu/internships", "_blank");
-                    unlockChatbotUI();
-                }}
-            ]);
+            // Final step - unlock UI and call onDone (which will set the final options)
             unlockChatbotUI();
-            if (typeof onDone === "function") onDone();
+            if (typeof onDone === "function") {
+                onDone();
+            }
         }
     });
 }
@@ -1837,6 +1845,22 @@ function summarizeInfo(info) {
     const sentences = safeInfo.match(/[^.!?]+[.!?]+/g);
     if (!sentences) return info;
     return sentences.slice(0, 2).join(' ').trim();
+}
+
+// Animate in the options drawer
+function showOptionsDrawer() {
+    const optionsDrawer = document.getElementById('chatbot-options-drawer');
+    if (optionsDrawer) {
+        optionsDrawer.classList.add('visible');
+    }
+}
+
+// Animate out the options drawer
+function hideOptionsDrawer() {
+    const optionsDrawer = document.getElementById('chatbot-options-drawer');
+    if (optionsDrawer) {
+        optionsDrawer.classList.remove('visible');
+    }
 }
 
 // Add a loading overlay inside the options container if not present
@@ -1874,7 +1898,7 @@ function ensureLoadingOverlay() {
         spinnerLayer.style.zIndex = '1002';
         spinnerLayer.style.background = 'rgba(255,255,255,0.1)';
         spinnerLayer.innerHTML = `
-            <div class="chatbot-loading-spinner-wrap" style="font-size:2rem;color:#00695c;display:flex;align-items:center;gap:0.7em;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+            <div class="chatbot-loading-spinner-wrap" style="font-size:3rem;color:#00695c;display:flex;align-items:center;gap:0.7em;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
                 <span class="ri-loader-4-line chatbot-loading-spinner" style="opacity:0;transform:scale(0.85);animation:spin 1s linear infinite;"></span>
             </div>
         `;
@@ -2043,15 +2067,13 @@ function unlockChatbotUI() {
 function showExperienceResultsList(list) {
     const tagArea = document.getElementById('chatbot-filter-tags');
     if (tagArea) tagArea.style.display = "none";
-
+    showOptionsDrawer();
     if (!list || list.length === 0) {
         chatbotShowOffices();
         return;
     }
-
     const intro = "Based on your responses, you might be interested in ";
     const message = formatExperienceTermsMessage(list, intro);
-
     addMessage(message, "bot", () => {
         attachClickHandlersToTerms(experiences);
         // Scroll to top after the message is added

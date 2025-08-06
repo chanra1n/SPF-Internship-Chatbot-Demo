@@ -129,29 +129,6 @@
         drawerOpen = open;
         drawer.classList.toggle('closed', !open);
     }
-    handle.addEventListener('click', () => setDrawer(!drawerOpen));
-
-    // Touch/drag support for mobile
-    handle.addEventListener('touchstart', e => {
-        dragging = true;
-        startY = e.touches[0].clientY;
-    });
-    handle.addEventListener('touchmove', e => {
-        if (!dragging) return;
-        currentY = e.touches[0].clientY;
-    });
-    handle.addEventListener('touchend', () => {
-        if (!dragging) return;
-        if (currentY && startY && currentY - startY > 30) setDrawer(false);
-        if (currentY && startY && startY - currentY > 30) setDrawer(true);
-        dragging = false;
-        startY = currentY = null;
-    });
-
-    // Optional: allow clicking the handle to open if closed
-    drawer.addEventListener('click', e => {
-        if (drawer.classList.contains('closed') && e.target === handle) setDrawer(true);
-    });
 
     // Cover overlay logic
     document.addEventListener('DOMContentLoaded', function() {

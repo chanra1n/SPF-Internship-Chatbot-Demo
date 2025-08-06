@@ -3,7 +3,7 @@
         {
             "name": "Academic Internship",
             "description": "Internships connected to a course; students get projects with faculty help and receive course credit. Typically not paid. The Center for Community Based Learning facilitates academic internships.",
-            "tags": ["academic internship", "course credit", "faculty help", "not paid", "reflection", "off-campus", "academic", "internship", "ccbl"]
+            "tags": ["academic internship", "course credit", "faculty help", "unpaid", "reflection", "off-campus", "academic", "internship", "ccbl"]
         },
         {
             "name": "Paid Internship",
@@ -88,7 +88,7 @@
                 "academic year",
                 "on-campus",
                 "off-campus",
-                "not paid"
+                "unpaid"
             ],
             "contactName": "Y.E.S. Staff",
             "contactEmail": "yes@humboldt.edu"
@@ -182,7 +182,7 @@
         "service learning": "Service learning combines coursework with meaningful community service.",
         "shadowing": "Job shadowing lets you observe professionals in their work environment.",
         "paid": "Paid opportunities provide financial compensation for your work.",
-        "not paid": "Unpaid opportunities do not offer financial compensation.",
+        "unpaid": "Unpaid opportunities do not offer financial compensation.",
         "on-campus": "On-campus experiences take place at Cal Poly Humboldt.",
         "off-campus": "Off-campus experiences occur at external organizations or sites.",
         "academic year": "Academic year opportunities take place during the fall and spring semesters.",

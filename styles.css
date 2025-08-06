@@ -182,6 +182,12 @@ body {
     background: var(--glass-surface-strong) !important;
     /* Remove margin and centering for desktop */
     margin: 0 !important;
+    opacity: 0;
+    transition: opacity 0.35s var(--fluid-ease);
+}
+
+#chatbot-options-drawer.visible {
+    opacity: 1;
 }
 
 #chatbot-messages {
