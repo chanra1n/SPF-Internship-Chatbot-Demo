@@ -360,6 +360,7 @@ function setOptions(options) {
                 // Pair if:
                 // - opt1 is forced half AND opt2 is forced half
                 // - opt1 is auto-short AND opt2 is auto-short
+                // A single remaining short button will take a full row.
                 const canPair = (opt1.width === 'half' && opt2.width === 'half') || (!hasOpt1Width && !hasOpt2Width && !isOpt1Long && !isOpt2Long);
 
                 if (canPair) {
@@ -468,49 +469,218 @@ function chatbotStudentFlowStart() {
     filterSelections = {};
     showFilterTags();
     hideToolbar();
+
     queueMessage("Alright. Some programs have major-specific internship courses for students. You can explore the major-specific experiences or search all opportunities.", "bot", () => {
-        const studentMajors = [
-            "Anthropology", "Art", "Biology", "Business Administration", "Cannabis Studies", 
-            "Child Development", "Computer Science", "Critical Race Gender and Sexuality", 
-            "Economics", "English", "Environmental Science and Management", "Fire Science", 
-            "Forestry", "French", "Geospatial Analysis", "History", 
-            "Journalism and Mass Communication", "Kinesiology", "Political Science", 
-            "Recreation Administration", "Sociology"
-        ];
-        const options = studentMajors.map(m => ({
-            label: m,
-            onClick: () => chatbotSetMajor(m)
-        }));
-        options.push({
-            label: "Major not listed",
-            onClick: () => {
-                // This is different from chatbotSetMajor(null) because we want to add a user message
-                chatbotState.major = null;
-                queueMessage("Major not listed", "user", () => {
-                    filterTopicIndex = 0;
-                    filterSelections = {};
-                    chatbotState.filters = [];
-                    showFilterTags();
-                    chatbotAskFilterTopic();
-                });
-            }
-        });
-        options.push({
-            label: "Show me everything",
-            onClick: () => {
-                chatbotState.major = null;
-                queueMessage("Show me everything", "user", () => {
-                    filterTopicIndex = 0;
-                    filterSelections = {};
-                    chatbotState.filters = [];
-                    showFilterTags();
-                    chatbotAskFilterTopic();
-                });
-            }
-        });
-        setOptions(options);
+        setupMajorSearch();
     });
 }
+
+function setupMajorSearch() {
+    const optArea = document.getElementById('chatbot-options');
+    optArea.innerHTML = ''; // Clear existing options
+
+    // Use a class to switch to flex layout, and remove parent padding
+    optArea.className = 'chatbot-options major-search-active';
+
+    // Create a scrollable container for search input and results
+    const scrollableContainer = document.createElement('div');
+    scrollableContainer.className = 'major-search-scroll-area';
+
+    // Container for the search input (this will be sticky)
+    const searchContainer = document.createElement('div');
+    searchContainer.className = 'chatbot-major-search-container';
+    
+    const searchIcon = document.createElement('i');
+    searchIcon.className = 'ri-search-line';
+    searchContainer.appendChild(searchIcon);
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Search for your major...';
+    input.className = 'chatbot-major-search-input';
+    searchContainer.appendChild(input);
+    
+    // The search container now goes directly into the scrollable area
+    scrollableContainer.appendChild(searchContainer);
+
+    // Container for major results
+    const resultsContainer = document.createElement('div');
+    resultsContainer.id = 'major-results';
+    resultsContainer.className = 'chatbot-major-results';
+    scrollableContainer.appendChild(resultsContainer);
+
+    optArea.appendChild(scrollableContainer);
+
+    // Container for the static buttons below (the fixed part)
+    const staticButtonsContainer = document.createElement('div');
+    staticButtonsContainer.className = 'chatbot-major-static-buttons';
+    optArea.appendChild(staticButtonsContainer);
+
+    // Animate the search UI components
+    const animatedElements = [searchContainer, resultsContainer, staticButtonsContainer];
+    animatedElements.forEach((el, idx) => {
+        el.style.opacity = '0';
+        el.style.animation = `bubbleFloat 0.6s var(--fluid-ease) forwards`;
+        el.style.animationDelay = `${0.1 * (idx + 1)}s`;
+    });
+
+    setTimeout(() => {
+        animatedElements.forEach(el => {
+            el.style.opacity = '1';
+        });
+    }, 10);
+
+    const studentMajorsWithLinks = [
+        { name: "Anthropology", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=74677" },
+        { name: "Art", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=74747" },
+        { name: "Biology", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=74857" },
+        { name: "Business Administration", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=74819" },
+        { name: "Cannabis Studies", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=76992" },
+        { name: "Child Development", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=74938" },
+        { name: "Computer Science", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75069" },
+        { name: "Critical Race Gender and Sexuality", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75033" },
+        { name: "Economics", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75125" },
+        { name: "English", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75246" },
+        { name: "Environmental Science and Management", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75409" },
+        { name: "Fire Science", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75509" },
+        { name: "Forestry", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75519" },
+        { name: "French", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75551" },
+        { name: "Geospatial Analysis", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=77001" },
+        { name: "History", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75755" },
+        { name: "Journalism and Mass Communication", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75810" },
+        { name: "Kinesiology", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=76590" },
+        { name: "Political Science", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=76345" },
+        { name: "Recreation Administration", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=76474" },
+        { name: "Sociology", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=76590" }
+    ];
+
+    input.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const filteredMajors = studentMajorsWithLinks.filter(major => 
+            major.name.toLowerCase().includes(searchTerm)
+        );
+        renderMajorResults(filteredMajors, resultsContainer);
+    });
+
+    // Initial render of all majors
+    renderMajorResults(studentMajorsWithLinks, resultsContainer);
+
+    // Add static buttons
+    renderStaticMajorButtons(staticButtonsContainer);
+}
+
+function renderMajorResults(majors, container) {
+    container.innerHTML = '';
+    majors.forEach(major => {
+        // Each item is an anchor tag that looks exactly like a button
+        const majorLink = document.createElement('a');
+        majorLink.className = 'chatbot-option-btn'; // Use the existing button class
+        majorLink.href = major.url;
+        majorLink.rel = 'noopener noreferrer';
+
+        // Style it to have content justified to the start
+        majorLink.style.justifyContent = 'space-between';
+        majorLink.style.animation = 'none'; // Disable entry animation for search results
+        majorLink.style.opacity = '1';
+
+        // Allow the link to navigate directly.
+        // The class is removed so the UI is correct if the user navigates back.
+        majorLink.addEventListener('click', () => {
+            const optArea = document.getElementById('chatbot-options');
+            if (optArea) optArea.classList.remove('major-search-active');
+        });
+
+        const majorName = document.createElement('span');
+        majorName.className = 'chatbot-btn-label';
+        majorName.textContent = major.name;
+        majorName.style.textAlign = 'left';
+        majorName.style.flexGrow = '1';
+
+        const icon = document.createElement('i');
+        icon.className = 'ri-arrow-right-line';
+
+        majorLink.appendChild(majorName);
+        majorLink.appendChild(icon);
+        container.appendChild(majorLink);
+    });
+}
+
+function renderStaticMajorButtons(container) {
+    container.innerHTML = ''; // Clear previous buttons
+    const buttons = [
+        { 
+            label: "Major missing", 
+            icon: "question-line",
+            onClick: () => {
+                queueMessage("I don't see my major listed.", "user", () => {
+                    chatbotState.major = "No major specified"; // Set a placeholder major
+                    filterTopicIndex = 0;
+                    filterSelections = {};
+                    const optArea = document.getElementById('chatbot-options');
+                    if (optArea) optArea.classList.remove('major-search-active');
+                    chatbotAskFilterTopic();
+                    // The loading overlay is hidden inside chatbotAskFilterTopic's callback
+                });
+            }
+        },
+        { 
+            label: "Skip", 
+            icon: "arrow-right-s-line",
+            onClick: () => {
+                queueMessage("Just show me everything.", "user", () => {
+                    chatbotState.major = "No major specified"; // Set a placeholder major
+                    filterTopicIndex = 0;
+                    filterSelections = {};
+                    const optArea = document.getElementById('chatbot-options');
+                    if (optArea) optArea.classList.remove('major-search-active');
+                    chatbotAskFilterTopic();
+                    // The loading overlay is hidden inside chatbotAskFilterTopic's callback
+                });
+            }
+        }
+    ];
+
+    // We can't use setOptions here as it would clear the search input and results.
+    // So, we'll create the buttons manually.
+    buttons.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'chatbot-option-btn';
+        
+        const labelSpan = document.createElement('span');
+        labelSpan.className = 'chatbot-btn-label';
+        labelSpan.textContent = opt.label;
+
+        if (opt.icon) {
+            const icon = document.createElement('i');
+            icon.className = `ri-${opt.icon}`;
+            
+            // For the skip button, put the icon after the label.
+            if (opt.label === "Skip") {
+                btn.appendChild(labelSpan);
+                btn.appendChild(icon);
+            } else {
+                // For all other buttons, icon comes first.
+                btn.appendChild(icon);
+                btn.appendChild(labelSpan);
+            }
+        } else {
+            // If no icon, just add the label.
+            btn.appendChild(labelSpan);
+        }
+
+        btn.onclick = () => {
+            if (chatbotUILocked) return;
+            lockChatbotUI();
+            showLoadingOverlay(); // Show overlay on click
+            // Use a timeout to ensure the overlay renders before proceeding
+            setTimeout(() => {
+                opt.onClick();
+            }, 250);
+        };
+        container.appendChild(btn);
+    });
+}
+
 
 // --- Generic filter flow for faculty/staff and community partners ---
 function chatbotGenericFilterFlowStart(role) {
@@ -1261,15 +1431,8 @@ function chatbotShowGenericResults(role, filters) {
 
 // --- Student flow continues as before ---
 function chatbotAskMajor() {
-    hideToolbar();
-    queueMessage("Alright. What's your major?", "bot", () => {
-        setOptions(
-            majors.map(m => ({
-                label: m,
-                onClick: () => chatbotSetMajor(m)
-            }))
-        );
-    });
+    // This function is now deprecated. The logic is handled by setupMajorSearch.
+    // Kept here to avoid breaking any potential legacy calls, but it does nothing.
 }
 
 function chatbotSetMajor(major) {
@@ -1390,6 +1553,7 @@ function chatbotAskFilterTopic() {
     
     queueMessage(topic.label, "bot", () => {
         renderFilterScreen(topic);
+        hideLoadingOverlay(); // Hide overlay when the next screen is ready
     });
 }
 
@@ -1426,7 +1590,7 @@ function renderFilterScreen(topic) {
         infoBtn.type = 'button';
         infoBtn.className = 'chatbot-info-btn';
         infoBtn.style.position = 'absolute';
-        infoBtn.style.right = '0.7em';
+        infoBtn.style.right = '1em';
         infoBtn.style.top = '50%';
         infoBtn.style.transform = 'translateY(-50%)';
         infoBtn.style.background = 'none';

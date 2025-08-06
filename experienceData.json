@@ -2,43 +2,36 @@
     "experiences": [
         {
             "name": "Academic Internship",
-            "image": "",
             "description": "Internships connected to a course; students get projects with faculty help and receive course credit. Typically not paid. The Center for Community Based Learning facilitates academic internships.",
             "tags": ["academic internship", "course credit", "faculty help", "not paid", "reflection", "off-campus", "academic", "internship", "ccbl"]
         },
         {
             "name": "Paid Internship",
-            "image": "",
             "description": "Internships offered by companies during the academic year or summer. Students are hired directly by the company. Opportunities are typically advertised by the Career Development Center, Library, and some departments.",
             "tags": ["paid internship", "paid", "company", "academic year", "summer", "off-campus", "career", "internship", "cdc", "library"]
         },
         {
             "name": "Research",
-            "image": "",
             "description": "Opportunities with faculty, research labs, or agencies to generate new knowledge. Usually paid, especially off-campus. Advertised via Sponsored Programs Foundation, departments, or faculty.",
             "tags": ["research", "faculty", "paid", "off-campus", "summer", "academic year", "spf", "research internship"]
         },
         {
             "name": "Fellowship",
-            "image": "",
             "description": "Opportunities offered by faculty members at Cal Poly Humboldt, or other universities, centers and institutes to engage in scholarly and creative activities. Experience is usually paid. Advertised through the Sponsored Programs Foundation, departments, or faculty.",
             "tags": ["fellowship", "research", "paid", "off-campus", "spf"]
         },
         {
             "name": "Service Learning",
-            "image": "",
             "description": "A particular type of academic internship course whose focus is to provide a service to an organization external to campus. The Center for Community Based Learning facilitates service learning courses.",
             "tags": ["service learning", "service", "course credit", "reflection", "off-campus", "community", "ccbl"]
         },
         {
             "name": "Clinical Placement",
-            "image": "",
             "description": "A particular type of academic internship course in which students are placed in a clinical setting to gain professional experience. Common for social work majors. The Center for Community Based Learning facilitates clinical placements.",
             "tags": ["clinical placement", "clinical", "professional", "course credit", "required", "reflection", "off-campus", "ccbl"]
         },
         {
             "name": "Practicum",
-            "image": "",
             "description": "A particular type of academic internship course in which students are placed in a professional setting to gain experience. Common for psychology majors. The Center for Community Based Learning facilitates practica.",
             "tags": ["practicum", "professional", "course credit", "required", "reflection", "off-campus", "ccbl"]
         }

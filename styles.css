@@ -376,6 +376,115 @@ body {
     overflow: hidden;
 }
 
+/* --- Major Search Specific Styles --- */
+
+#chatbot-options.major-search-active {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    overflow: hidden;
+    height: 100%; /* Ensure it fills the available space */
+}
+
+.major-search-scroll-area {
+    flex: 1 1 auto; /* Allow this area to grow and shrink */
+    overflow-y: auto;
+    min-height: 0; /* Prevent flexbox overflow issues */
+}
+
+.chatbot-major-search-container {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: var(--glass-blur-ultra);
+    border-bottom: var(--glass-border);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    margin: 0;
+    border-radius: 0px 0px 20px 20px;
+}
+
+.chatbot-major-search-container .ri-search-line {
+    /* Icon is now a simple flex item */
+    font-size: 1.2rem;
+    color: var(--ocean-light);
+    flex-shrink: 0; /* Prevent icon from shrinking */
+}
+
+.chatbot-major-search-input {
+    /* Inherit all visual styles from the main button to ensure perfect consistency */
+    box-sizing: border-box;
+    min-height: 3rem;
+    width: 100%;
+    background: var(--glass-tint-ocean);
+    backdrop-filter: var(--glass-blur-medium);
+    color: var(--ocean-deep);
+    border: var(--glass-border-strong);
+    border-radius: 100vmin;
+    font: 600 1rem 'Poppins', sans-serif;
+    box-shadow: var(--glass-shadow);
+    transition: all 0.3s var(--fluid-ease);
+    
+    /* Remove padding used for absolute positioning */
+    padding: 0.875rem 1.5rem;
+    outline: none;
+    -webkit-appearance: none;
+    appearance: none;
+    flex-grow: 1; /* Allow input to fill remaining space */
+}
+.chatbot-major-search-input::placeholder {
+    color: var(--ocean-light);
+    font-weight: 500;
+}
+.chatbot-major-search-input:focus {
+    border-color: var(--ocean-light);
+    box-shadow: 0 0 0 3px rgba(0, 105, 92, 0.2), var(--glass-shadow-strong);
+    background: var(--glass-surface-strong);
+}
+
+.chatbot-major-results {
+    display: flex;
+    flex-direction: column;
+    gap: 0rem;
+    padding: 0rem 1rem;
+}
+
+/* Remove the custom .chatbot-major-item styles entirely */
+/* The results now use .chatbot-option-btn directly from bot.js */
+
+.chatbot-major-static-buttons {
+    padding: 0.5em 1em;
+    border-top: var(--glass-border);
+    background: var(--glass-surface-strong);
+    backdrop-filter: var(--glass-blur-strong);
+    display: flex;
+    gap: 0.5rem;
+    justify-content: space-between;
+    padding-bottom: 1em;
+}
+
+.chatbot-major-static-buttons .chatbot-option-btn {
+    margin-bottom: 0;
+    flex: 1 1 0;
+    animation: none;
+    opacity: 1;
+    background: var(--glass-tint-ocean);
+    color: var(--ocean-deep);
+    border: var(--glass-border-strong);
+    max-width: max-content;
+    padding: 0.5rem 1rem;
+}
+
+.chatbot-major-static-buttons .chatbot-option-btn:hover {
+    background: var(--glass-surface-strong);
+    border-color: var(--ocean-light);
+    color: var(--ocean-main);
+}
+/* --- End Major Search Styles --- */
+
 .chatbot-btn-icon-circle {
     display: flex;
     align-items: center;
@@ -911,7 +1020,7 @@ body {
         padding: 1rem 1.5rem;
     }
     .chatbot-option-btn {
-        font: 600 0.8rem 'Poppins', sans-serif;
+        font: 600 1rem 'Poppins', sans-serif;
         padding: 0.75rem 1.5rem;
         min-height: 2.75rem;
     }
@@ -994,7 +1103,7 @@ body {
         padding: 1rem 0.75rem;
     }
     .chatbot-option-btn {
-        font: 600 0.9rem 'Poppins', sans-serif;
+        font: 600 1rem 'Poppins', sans-serif;
         padding: 0.625rem 0.875rem;
         min-height: 2.75rem;
     }
@@ -1518,3 +1627,5 @@ body {
         display: none !important;
     }
 }
+
+/* --- End Major Search Styles --- */
