@@ -348,6 +348,11 @@ body {
     box-sizing: border-box;
 }
 
+/* Remove underline for all chatbot-option-btn, including anchor tags in major search */
+.chatbot-option-btn, .chatbot-option-btn:link, .chatbot-option-btn:visited, .chatbot-option-btn:active, .chatbot-option-btn:hover {
+    text-decoration: none !important;
+}
+
 .chatbot-option-btn {
     box-sizing: border-box;
     margin-bottom: 0.75rem;
@@ -476,6 +481,15 @@ body {
     border: var(--glass-border-strong);
     max-width: max-content;
     padding: 0.5rem 1rem;
+}
+
+.chatbot-option-btn.selected {
+    background: var(--glass-tint-amber) !important;
+    color: var(--amber-warm) !important;
+    border: 2px solid var(--amber-glow) !important;
+    font-weight: 700;
+    backdrop-filter: var(--glass-blur-strong);
+    transform: scale(1.05);
 }
 
 .chatbot-major-static-buttons .chatbot-option-btn:hover {

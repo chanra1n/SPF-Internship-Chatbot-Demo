@@ -91,7 +91,7 @@ function showFilterTags() {
     // Populate tagArea
     tagArea.innerHTML = "";
     let hasTags = false;
-    if (chatbotState.major) {
+    if (chatbotState.major && chatbotState.major !== "No major specified" && chatbotState.major !== undefined && chatbotState.major !== null && chatbotState.major !== "") {
         const tag = document.createElement('span');
         tag.className = "chatbot-filter-tag";
         tag.textContent = chatbotState.major;
