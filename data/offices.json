@@ -1,0 +1,116 @@
+[
+    {
+        "name": "Career Development Center",
+        "description": "The Career Development Center advertises paid opportunities such as <b>jobs</b>, <b>paid internships</b>, and <b>fellowships</b> through Handshake. They host campus events like the Career Fair and Part-time Job & Volunteer Fair, and offer career advising, resume writing, and job application support to students. Opportunities may take place during the academic year or the summer, may be on or off campus and are typically not tied to academic course credit.",
+        "link": "https://www.humboldt.edu/career-development",
+        "image": "images/career_development_center.png",
+        "tags": [
+            "paid",
+            "internship",
+            "fellowship",
+            "academic year",
+            "summer",
+            "off-campus",
+            "on-campus",
+            "not for course credit"
+        ]
+    },
+    {
+        "name": "Center for Community Based Learning (CCBL)",
+        "description": "The Center for Community Based Learning (CCBL) supports and promotes course-based, hands-on learning practices such as <b>internships</b>, <b>practicums</b>, and <b>service learning</b> courses. CCBL assists faculty with course design and community connections, students with community engagement and S4 reporting, and community partners with site approval and opportunity development. Opportunities offered through the CCBL are usually tied to course credit, may sometimes be paid, may take place on or off campus and are typically during the academic year but may also be in the summer.",
+        "link": "https://www.humboldt.edu/ccbl",
+        "image": "images/ccbl.jpg",
+        "tags": [
+            "internship",
+            "service learning",
+            "practicum",
+            "academic year",
+            "academic internship",
+            "off-campus",
+            "on-campus",
+            "course credit",
+            "paid",
+            "summer"
+        ],
+        "contactName": "CCBL Staff",
+        "contactPhone": "(707)-826-4960",
+        "contactEmail": "ccbl@humboldt.edu",
+        "contactLocation": "Lower Library 026",
+        "locationEmbed": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3016.7889587768937!2d-124.0801692!3d40.876505400000006!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x54d1576d52a99eb7%3A0xe8b83d269133cc91!2sCal%20Poly%20Humboldt%20Library!5e0!3m2!1sen!2sus!4v1749797667063!5m2!1sen!2sus"
+    },
+    {
+        "name": "Youth Educational Services (YES)",
+        "description": "Youth Educational Services (YES) offers a variety of community-based <b>volunteer opportunities</b>, from large-scale events to semester-long programs. Students can participate in one-day service events, weekly drop-in activities, or semester-long cohorts. Opportunities are not paid, may be for course credit and may take place on or off campus.",
+        "link": "https://www.humboldt.edu/youth-educational-services",
+        "image": "images/yes.jpg",
+        "tags": [
+            "service learning",
+            "course credit",
+            "academic year",
+            "on-campus",
+            "off-campus",
+            "unpaid"
+        ],
+        "contactName": "Y.E.S. Staff",
+        "contactEmail": "yes@humboldt.edu"
+    },
+    {
+        "name": "College Corps",
+        "description": "College Corps is a service fellowship that provides students with $10,000 in college funding for completing 450 hours of service in education, climate action, or food insecurity. Hours may also count toward service or internship requirements for other courses. Students earn course credit in the program and work in the community.  The work can take place during the academic year or the summer.",
+        "link": "https://www.humboldt.edu/ccbl/college-corps",
+        "image": "images/cc.jpeg",
+        "tags": [
+            "service learning",
+            "fellowship",
+            "paid",
+            "academic year",
+            "summer",
+            "course credit",
+            "off-campus"
+        ],
+        "contactName": "College Corps Staff",
+        "contactPhone": "(707)-826-4961",
+        "contactEmail": "collegecorps@humboldt.edu",
+        "contactLocation": "Lower Library 028",
+        "locationEmbed": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3016.7889587768937!2d-124.0801692!3d40.876505400000006!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x54d1576d52a99eb7%3A0xe8b83d269133cc91!2sCal%20Poly%20Humboldt%20Library!5e0!3m2!1sen!2sus!4v1749797667063!5m2!1sen!2sus"
+    },
+    {
+        "name": "Sponsored Programs Foundation",
+        "description": "The SPF Engagement Hub is a website that showcases externally funded opportunities for students and faculty, including <b>fellowships</b>, <b>research opportunities</b>, and <b>paid internships</b>. All opportunities are tied to existing grants and contracts and change dynamically. Opportunities vary widely; they are usually not for course credit, may take place on or off-campus, during the academic year or the summer.",
+        "link": "https://humboldt-eh.infoready4.com/",
+        "image": "images/spf.jpg",
+        "tags": [
+            "fellowship",
+            "research",
+            "paid",
+            "internship",
+            "not for course credit",
+            "on-campus",
+            "off-campus",
+            "academic year",
+            "summer"
+        ],
+        "contactName": "Cara Peters",
+        "contactEmail": "cap924@humboldt.edu",
+        "contactPhone": "(707)-826-5153"
+    },
+    {
+        "name": "Cal Poly Humboldt Library",
+        "description": "The Cal Poly Humboldt Library offers several paid, on-campus internship opportunities for students, available year-round. These internships involve <b>research</b> and <b>scholarships</b>, in addition to the Library's core services for the campus community. The opportunities do not offer course credit.",
+        "link": "https://library.humboldt.edu/library-scholar-internships",
+        "image": "images/lib.jpg",
+        "tags": [
+            "paid",
+            "research",
+            "on-campus",
+            "internship",
+            "academic year",
+            "summer",
+            "not for course credit"
+        ],
+        "contactName": "Library Staff",
+        "contactEmail": "library@humboldt.edu",
+        "contactPhone": "(707)-826-3431",
+        "locationEmbed": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3016.7889587768937!2d-124.0801692!3d40.876505400000006!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x54d1576d52a99eb7%3A0xe8b83d269133cc91!2sCal%20Poly%20Humboldt%20Library!5e0!3m2!1sen!2sus!4v1749797667063!5m2!1sen!2sus"
+    }
+]

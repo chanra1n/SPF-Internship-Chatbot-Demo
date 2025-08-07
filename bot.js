@@ -4,16 +4,23 @@ let majors = [];
 let departmentAttributes = {};
 let definitions = {}; // <-- Add this
 
-// Load data from experienceData.json (async)
+// Load data from multiple JSON files in /data (async)
 async function loadExperienceData() {
     try {
-        const res = await fetch('experienceData.json');
-        const data = await res.json();
-        experiences = data.experiences || [];
-        offices = data.offices || [];
-        majors = data.majors || [];
-        departmentAttributes = data.departmentAttributes || {};
-        definitions = data.definitions || {}; // <-- Load definitions
+        const [experiencesRes, officesRes, majorsRes, departmentAttributesRes, definitionsRes] = await Promise.all([
+            fetch('data/experiences.json'),
+            fetch('data/offices.json'),
+            fetch('data/majors.json'),
+            fetch('data/department_attributes.json'),
+            fetch('data/definitions.json')
+        ]);
+
+        experiences = await experiencesRes.json() || [];
+        offices = await officesRes.json() || [];
+        majors = await majorsRes.json() || [];
+        departmentAttributes = await departmentAttributesRes.json() || {};
+        definitions = await definitionsRes.json() || {};
+
     } catch (e) {
         console.error("Failed to load experience data:", e);
         // Fallback: empty arrays/objects
@@ -455,10 +462,10 @@ function chatbotChooseMode(mode) {
     chatbotState.mode = mode;
     queueMessage(
         mode === "student"
-            ? "Student"
+            ? "I'm a student."
             : mode === "faculty"
-            ? "Faculty/Staff"
-            : "Community Partner",
+            ? "I'm a faculty/staff member."
+            : "I'm a Community Partner.",
         "user"
     );
     if (mode === "student") {
@@ -480,8 +487,12 @@ function chatbotStudentFlowStart() {
     showFilterTags();
     hideToolbar();
 
-    queueMessage("Alright. Some programs have major-specific internship courses for students. You can explore the major-specific experiences or search all opportunities.", "bot", () => {
-        setupMajorSearch();
+    queueMessage("Alright!", "bot", () => {
+        queueMessage("Some programs have major-specific internship courses for students.", "bot", () => {
+            queueMessage("You can explore the major-specific experiences or search all opportunities.", "bot", () => {
+                setupMajorSearch();
+            });
+        });
     });
 }
 
@@ -528,40 +539,17 @@ function setupMajorSearch() {
             el.style.transform = 'translateY(0)';
         });
     }, 10);
-    const studentMajorsWithLinks = [
-        { name: "Anthropology", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=74677" },
-        { name: "Art", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=74747" },
-        { name: "Biology", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=74857" },
-        { name: "Business Administration", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=74819" },
-        { name: "Cannabis Studies", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=76992" },
-        { name: "Child Development", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=74938" },
-        { name: "Computer Science", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75069" },
-        { name: "Critical Race Gender and Sexuality", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75033" },
-        { name: "Economics", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75125" },
-        { name: "English", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75246" },
-        { name: "Environmental Science and Management", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75409" },
-        { name: "Fire Science", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75509" },
-        { name: "Forestry", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75519" },
-        { name: "French", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75551" },
-        { name: "Geospatial Analysis", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=77001" },
-        { name: "History", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75755" },
-        { name: "Journalism and Mass Communication", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=75810" },
-        { name: "Kinesiology", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=76590" },
-        { name: "Political Science", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=76345" },
-        { name: "Recreation Administration", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=76474" },
-        { name: "Sociology", url: "https://catalog.humboldt.edu/preview_course_nopop.php?catoid=14&coid=76590" }
-    ];
 
     input.addEventListener('input', (e) => {
         const searchTerm = e.target.value.toLowerCase();
-        const filteredMajors = studentMajorsWithLinks.filter(major => 
+        const filteredMajors = majors.filter(major => 
             major.name.toLowerCase().includes(searchTerm)
         );
         renderMajorResults(filteredMajors, resultsContainer);
     });
 
     // Initial render of all majors
-    renderMajorResults(studentMajorsWithLinks, resultsContainer);
+    renderMajorResults(majors, resultsContainer);
 
     // Add static buttons
     renderStaticMajorButtons(staticButtonsContainer);
@@ -1003,18 +991,17 @@ function updatePersistentToolbar(topic) {
                     }
                 );
             } else {
-                const nextBotLabel = topicsArr[filterTopicIndex + 1]?.label;
                 queueUserAndBotMessages(
                     userMsgs,
-                    nextBotLabel,
+                    null, // No bot message, let chatbotAskFilterTopic handle it
                     () => {
                         filterTopicIndex++;
                         if (chatbotState.mode === "faculty" || chatbotState.mode === "community") {
-                            renderGenericFilterScreen(chatbotState.mode, topicsArr[filterTopicIndex]);
+                            chatbotAskGenericFilterTopic(chatbotState.mode);
                         } else {
-                            renderFilterScreen(topicsArr[filterTopicIndex]);
+                            chatbotAskFilterTopic();
                         }
-                        hideLoadingOverlay();
+                        // hideLoadingOverlay is handled by the ask topic function
                     }
                 );
             }
@@ -1054,18 +1041,17 @@ function updatePersistentToolbar(topic) {
                                 }
                             );
                         } else {
-                            const nextBotLabel = topicsArr[filterTopicIndex + 1]?.label;
                             queueUserAndBotMessages(
                                 userMsgs,
-                                nextBotLabel,
+                                null, // No bot message, let chatbotAskFilterTopic handle it
                                 () => {
                                     filterTopicIndex++;
                                     if (chatbotState.mode === "faculty" || chatbotState.mode === "community") {
-                                        renderGenericFilterScreen(chatbotState.mode, topicsArr[filterTopicIndex]);
+                                        chatbotAskGenericFilterTopic(chatbotState.mode);
                                     } else {
-                                        renderFilterScreen(topicsArr[filterTopicIndex]);
+                                        chatbotAskFilterTopic();
                                     }
-                                    hideLoadingOverlay();
+                                    // hideLoadingOverlay is handled by the ask topic function
                                 }
                             );
                         }
@@ -1450,6 +1436,7 @@ const filterTopics = [
     {
         key: "type",
         label: "What type of experience are you looking for?",
+        explanation: "If you're not sure, tap each info icon for more details.",
         options: [
             { label: "Internships", icon: "briefcase-line", value: "internship" },
             { label: "Research", icon: "flask-line", value: "research" },
@@ -1459,6 +1446,7 @@ const filterTopics = [
     {
         key: "compensation",
         label: "Do you prefer paid or unpaid opportunities?",
+        explanation: "Knowing this lets us show you experiences that match your financial needs.",
         options: [
             { label: "Paid", icon: "money-dollar-circle-line", value: "paid" },
             { label: "Unpaid", icon: "close-circle-line", value: "unpaid" }
@@ -1466,7 +1454,8 @@ const filterTopics = [
     },
     {
         key: "location",
-        label: "Where would you prefer your experience take place?",
+        label: "Where would you like your experience to take place?",
+        explanation: "Your choice helps us suggest on-campus or off-campus options that work for you.",
         options: [
             { label: "On Campus", icon: "hotel-line", value: "on-campus" },
             { label: "Off Campus", icon: "road-map-line", value: "off-campus" }
@@ -1475,6 +1464,7 @@ const filterTopics = [
     {
         key: "timing",
         label: "When are you available?",
+        explanation: "This helps us direct you towards opportunities available during your preferred time.",
         options: [
             { label: "Academic Year", icon: "calendar-event-line", value: "academic year" },
             { label: "Summer", icon: "sun-line", value: "summer" }
@@ -1482,7 +1472,8 @@ const filterTopics = [
     },
     {
         key: "credit",
-        label: "Are you interested in potentially earning course credit?",
+        label: "Are you interested in earning course credit?",
+        explanation: "We’ll show you options that could count toward your degree, if you want credit.",
         options: [
             { label: "Course Credit", icon: "graduation-cap-line", value: "course credit" }
         ]
@@ -1551,8 +1542,15 @@ function chatbotAskFilterTopic() {
     const topic = filterTopics[filterTopicIndex];
     
     queueMessage(topic.label, "bot", () => {
-        renderFilterScreen(topic);
-        hideLoadingOverlay(); // Hide overlay when the next screen is ready
+        if (topic.explanation) {
+            queueMessage(topic.explanation, "bot", () => {
+                renderFilterScreen(topic);
+                hideLoadingOverlay(); // Hide overlay when the next screen is ready
+            });
+        } else {
+            renderFilterScreen(topic);
+            hideLoadingOverlay(); // Hide overlay when the next screen is ready
+        }
     });
 }
 

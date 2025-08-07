@@ -1,0 +1,10 @@
+{
+    "Biology": ["research", "faculty help", "career-relevant skills"],
+    "Business": ["paid", "career-relevant skills"],
+    "Psychology": ["practicum", "required", "faculty help"],
+    "Social Work": ["clinical", "required", "faculty help"],
+    "Education": ["required", "off-campus", "faculty help"],
+    "Engineering": ["paid", "internship", "career-relevant skills"],
+    "Art": ["internship", "faculty help"],
+    "Other": []
+}
