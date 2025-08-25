@@ -4,10 +4,11 @@
     "service learning": "Service learning combines coursework with meaningful community service.",
     "shadowing": "Job shadowing lets you observe professionals in their work environment.",
     "paid": "Paid opportunities provide financial compensation for your work.",
-    "unpaid": "Unpaid opportunities do not offer financial compensation.",
-    "on-campus": "On-campus experiences take place at Cal Poly Humboldt.",
-    "off-campus": "Off-campus experiences occur at external organizations or sites.",
-    "academic year": "Academic year opportunities take place during the fall and spring semesters.",
-    "summer": "Summer opportunities occur during the summer break.",
-    "course credit": "These experiences can be counted toward your degree as academic credit."
+    "unpaid": "Unpaid opportunities do not offer financial compensation but provide valuable experience and learning.",
+    "on-campus": "On-campus experiences take place at Cal Poly Humboldt facilities, departments, or programs.",
+    "off-campus": "Off-campus experiences occur at external organizations, businesses, or community sites.",
+    "academic year": "Academic year opportunities take place during the fall and spring semesters when classes are in session.",
+    "summer": "Summer opportunities occur during the summer break, typically between May and August.",
+    "course credit": "These experiences can be counted toward your degree as academic credit through enrollment in specific courses.",
+    "not for credit": "These experiences are pursued for personal and professional development without earning academic credit toward your degree."
 }

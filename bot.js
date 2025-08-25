@@ -22,7 +22,7 @@ async function loadExperienceData() {
         definitions = await definitionsRes.json() || {};
 
     } catch (e) {
-        console.error("Failed to load experience data:", e);
+        console.error("Failed to load experience data.", e);
         // Fallback: empty arrays/objects
         experiences = [];
         offices = [];
@@ -1424,8 +1424,8 @@ function chatbotSetMajor(major) {
     chatbotState.major = major;
     queueMessage(major, "user", () => {
         filterTopicIndex = 0;
-        filterSelections = {};
-        chatbotState.filters = [];
+        filterSelections = {}; // Reset selections
+        chatbotState.filters = []; // Reset filters
         showFilterTags();
         chatbotAskFilterTopic();
     });
@@ -1434,22 +1434,21 @@ function chatbotSetMajor(major) {
 // Define filter topics for student flow
 const filterTopics = [
     {
-        key: "type",
-        label: "What type of experience are you looking for?",
-        explanation: "If you're not sure, tap each info icon for more details.",
-        options: [
-            { label: "Internships", icon: "briefcase-line", value: "internship" },
-            { label: "Research", icon: "flask-line", value: "research" },
-            { label: "Service Learning", icon: "service-line", value: "service learning" }
-        ]
-    },
-    {
         key: "compensation",
-        label: "Do you prefer paid or unpaid opportunities?",
+        label: "Are you looking for paid or unpaid opportunities?",
         explanation: "Knowing this lets us show you experiences that match your financial needs.",
         options: [
             { label: "Paid", icon: "money-dollar-circle-line", value: "paid" },
             { label: "Unpaid", icon: "close-circle-line", value: "unpaid" }
+        ]
+    },
+    {
+        key: "credit",
+        label: "Are you interested in earning course credit?",
+        explanation: "We'll show you options that could count toward your degree.",
+        options: [
+            { label: "For Credit", icon: "graduation-cap-line", value: "course credit" },
+            { label: "Not for Credit", icon: "prohibited-line", value: "not for credit" }
         ]
     },
     {
@@ -1470,14 +1469,6 @@ const filterTopics = [
             { label: "Summer", icon: "sun-line", value: "summer" }
         ]
     },
-    {
-        key: "credit",
-        label: "Are you interested in earning course credit?",
-        explanation: "We’ll show you options that could count toward your degree, if you want credit.",
-        options: [
-            { label: "Course Credit", icon: "graduation-cap-line", value: "course credit" }
-        ]
-    }
 ];
 
 // --- Add: Define filter topics for faculty/community (generic) flow ---
@@ -1530,12 +1521,14 @@ let filterSelections = {};
 
 // Main filter topic stepper
 function chatbotAskFilterTopic() {
-    // If all topics done, show results
+    // If all topics done, show final message and options
     if (filterTopicIndex >= filterTopics.length) {
-        chatbotState.filters = Object.values(filterSelections).flat();
-        // Ensure filterSelections is up-to-date for showFilterTags in chatbotShowResults
-        showFilterTags(); // Update tags based on final selections before showing results
-        chatbotShowResults(chatbotState.filters);
+        queueMessage("That's all the questions! You now have a better sense of what's available on campus.", "bot", () => {
+            setOptions([
+                { label: "Start Over", icon: "refresh-line", onClick: chatbotStart, width: "full" },
+                { label: "Internship Hub", icon: "global-line", onClick: () => window.open("https://www.humboldt.edu/internships", "_blank") }
+            ]);
+        });
         return;
     }
     
@@ -1558,14 +1551,16 @@ function renderFilterScreen(topic) {
     const optArea = document.getElementById('chatbot-options');
     optArea.innerHTML = '';
 
-    showToolbar();
-    updatePersistentToolbar(topic);
+    // No persistent toolbar for this flow. Options will drive the actions.
+    hideToolbar();
 
     const currentSelectionsForTopic = filterSelections[topic.key] || [];
     topic.options.forEach((opt, idx) => {
         const btn = document.createElement('button');
         btn.className = 'chatbot-option-btn';
-        if (currentSelectionsForTopic.includes(opt.value)) btn.classList.add('selected');
+        if (currentSelectionsForTopic.includes(opt.value)) {
+            btn.classList.add('selected');
+        }
         // Icon (left)
         if (opt.icon) {
             const iconCircle = document.createElement('div');
@@ -1601,26 +1596,24 @@ function renderFilterScreen(topic) {
         infoBtn.setAttribute('aria-label', `More info about ${opt.label}`);
         infoBtn.innerHTML = '<i class="ri-information-line" style = "color: var(--ocean-deep);opacity: 50%;"></i>';
         infoBtn.onclick = (e) => {
-            e.stopPropagation();
-            showInfoModal(opt.label, definitions[opt.value] || "No additional information available.");
+            e.stopPropagation(); // Prevent button click
+            const def = definitions[opt.value] || `Learn more about ${opt.label.toLowerCase()} opportunities by speaking with an advisor or visiting the relevant campus offices.`;
+            showInfoModal(opt.label, def);
         };
         btn.style.position = 'relative';
         btn.appendChild(infoBtn);
 
         btn.onclick = () => {
-            let selections = filterSelections[topic.key] || [];
-            const isSelected = selections.includes(opt.value);
-            if (isSelected) {
-                selections = selections.filter(v => v !== opt.value);
-                btn.classList.remove('selected');
-            } else {
-                selections = [...selections, opt.value];
-                btn.classList.add('selected');
-            }
-            filterSelections[topic.key] = selections;
-            showFilterTags();
-            updatePersistentToolbar(topic);
-            scrollMessagesToBottom();
+            if (chatbotUILocked) return;
+            lockChatbotUI();
+            queueMessage(opt.label, "user", () => {
+                // Add the selected filter to the main list
+                if (!chatbotState.filters.includes(opt.value)) {
+                    chatbotState.filters.push(opt.value);
+                }
+                showFilterTags();
+                showFilteredOfficesAndContinue();
+            });
         };
 
         btn.style.animationDelay = (0.08 * idx) + 's';
@@ -1633,6 +1626,237 @@ function renderFilterScreen(topic) {
         optArea.scrollTop = 0;
         scrollMessagesToBottom();
     }, 0);
+}
+
+// --- New function to show offices based on current filters and then continue ---
+function showFilteredOfficesAndContinue(showAll = false) {
+    // For regular filter selections, clear history but preserve recent context
+    // For "show all", keep the full conversation
+    if (!showAll) {
+        const msgArea = document.getElementById('chatbot-messages');
+        if (msgArea) {
+            // Keep only the last few messages for context
+            const messages = msgArea.querySelectorAll('.chatbot-msg');
+            if (messages.length > 3) {
+                // Clear everything and add a clean context
+                msgArea.innerHTML = '';
+                
+                // Add a clean context message
+                const latestFilter = chatbotState.filters[chatbotState.filters.length - 1];
+                const contextMsg = document.createElement('div');
+                contextMsg.className = 'chatbot-msg user';
+                const contextBubble = document.createElement('div');
+                contextBubble.className = 'chatbot-bubble user';
+                contextBubble.textContent = `I'm looking for ${latestFilter} opportunities.`;
+                contextMsg.appendChild(contextBubble);
+                msgArea.appendChild(contextMsg);
+                
+                scrollMessagesToBottom();
+            }
+        }
+    }
+    
+    let userTags = [];
+    if (chatbotState.major) userTags.push(chatbotState.major.toLowerCase());
+    userTags = userTags.concat(chatbotState.filters);
+
+    let filteredOffices;
+    if (showAll) {
+        filteredOffices = [...offices]; // Show all offices
+    } else {
+        // Find offices that have at least one of the user's tags
+        filteredOffices = offices.filter(office => {
+            const officeTags = (office.tags || []).map(t => t.toLowerCase());
+            return userTags.some(userTag => officeTags.includes(userTag));
+        });
+    }
+
+    // Sort offices by how many matching tags they have
+    const sortedOffices = filteredOffices.sort((a, b) => {
+        const aScore = getOfficeWeightedScore(a, userTags);
+        const bScore = getOfficeWeightedScore(b, userTags);
+        return bScore - aScore;
+    });
+
+    if (sortedOffices.length > 0) {
+        // More natural messaging
+        let message = "";
+        if (showAll) {
+            message = "Here are all the campus offices that can help with experiential learning.";
+        } else {
+            const filterName = chatbotState.filters[chatbotState.filters.length - 1]; // Get the latest filter
+            if (filterName === "paid") {
+                message = "Great! Here are some offices that can help you find paid opportunities.";
+            } else if (filterName === "unpaid") {
+                message = "Perfect! These offices can help you find meaningful unpaid experiences.";
+            } else if (filterName === "course credit") {
+                message = "Excellent! These offices specialize in credit-bearing experiences.";
+            } else if (filterName === "not for credit") {
+                message = "Wonderful! These offices can help you find experiences outside of coursework.";
+            } else if (filterName === "on-campus") {
+                message = "Here are offices that can connect you with on-campus opportunities.";
+            } else if (filterName === "off-campus") {
+                message = "These offices can help you find experiences beyond campus.";
+            } else if (filterName === "academic year") {
+                message = "Perfect! These offices can help with opportunities during the school year.";
+            } else if (filterName === "summer") {
+                message = "Great choice! These offices specialize in summer experiences.";
+            } else {
+                message = "Here are some offices that might be helpful.";
+            }
+        }
+        
+        queueMessage(message, "bot", () => {
+            // Display all matching offices normally
+            sortedOffices.forEach(office => {
+                const matchedTags = (office.tags || []).filter(tag =>
+                    userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
+                );
+                
+                let contactSection = '';
+                if (office.contactName || office.contactEmail || office.contactPhone) {
+                    contactSection = `
+                        <div class="chatbot-office-contact">
+                            ${office.contactName ? `<div class="contact-name"><i class="ri-user-3-line"></i> ${office.contactName}</div>` : ""}
+                            ${office.contactEmail ? `<div class="contact-email"><i class="ri-mail-line"></i> <a href="mailto:${office.contactEmail}">${office.contactEmail}</a></div>` : ""}
+                            ${office.contactPhone ? `<div class="contact-phone"><i class="ri-phone-line"></i> <a href="tel:${office.contactPhone.replace(/[^0-9+]/g, '')}">${office.contactPhone}</a></div>` : ""}
+                        </div>
+                    `;
+                }
+                
+                let locationSection = '';
+                if (office.locationEmbed) {
+                    locationSection = `
+                        <div class="chatbot-office-location">
+                            <iframe src="${office.locationEmbed}" width="100%" height="120" style="border:0;border-radius:10px;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                        </div>
+                    `;
+                }
+
+                // Display each office card
+                let officeCard = `
+                    <div class="chatbot-office-card-flex">
+                        ${office.image ? `<div class="chatbot-office-image-wrap"><img src="${office.image}" alt="${office.name}" class="chatbot-office-image"></div>` : ""}
+                        <div class="chatbot-office-main">
+                            <div class="chatbot-office-header">
+                                <h2 class="chatbot-office-title">${office.name}</h2>
+                            </div>
+                            <div class="chatbot-office-body">
+                                <p>${summarizeInfo(office.description || office.info)}</p>
+                                ${office.link ? `<button class="chatbot-option-btn" style="margin-bottom:0rem;" onclick="window.open('${office.link}', '_blank')">Website<i class="ri-external-link-fill" style="position: absolute;right: 1rem;font-size:1.2rem;"></i></button>` : ""}
+                                ${contactSection}
+                                ${locationSection}
+                                ${matchedTags.length > 0 ? `
+                                    <div class="chatbot-office-tags">
+                                        ${matchedTags.map(tag => `<span class="chatbot-office-tag">${tag}</span>`).join('')}
+                                    </div>
+                                ` : ""}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                addMessage(officeCard, "bot");
+            });
+            
+            // Add relevant experience type links based on current filters
+            showRelevantExperienceLinks();
+            
+            // After showing offices, ask to continue
+            promptToContinue();
+        });
+    } else {
+        queueMessage("Hmm, I don't have specific offices for that combination, but let's keep going to see what else we can find!", "bot", () => {
+            promptToContinue();
+        });
+    }
+}
+
+// --- New function to show relevant experience type links ---
+function showRelevantExperienceLinks() {
+    // Filter experiences based on user selections to show relevant links
+    const userTags = [...chatbotState.filters];
+    if (chatbotState.major) userTags.push(chatbotState.major.toLowerCase());
+    
+    // Find relevant experiences based on user's tags
+    const relevantExperiences = experiences.filter(exp => {
+        const expTags = (exp.tags || []).map(t => t.toLowerCase());
+        return userTags.some(userTag => expTags.includes(userTag));
+    });
+    
+    if (relevantExperiences.length > 0) {
+        // Sort by relevance (most matching tags first)
+        const sortedExperiences = relevantExperiences.sort((a, b) => {
+            const aMatches = (a.tags || []).filter(tag => 
+                userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
+            ).length;
+            const bMatches = (b.tags || []).filter(tag => 
+                userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
+            ).length;
+            return bMatches - aMatches;
+        });
+        
+        // Take top 2-3 most relevant experiences
+        const topExperiences = sortedExperiences.slice(0, 3);
+        
+        if (topExperiences.length > 0) {
+            queueMessage(`For more info, check out the following pages.`, "bot", () => {
+                const icons = ['ri-briefcase-line', 'ri-flask-line', 'ri-graduation-cap-line', 'ri-award-line', 'ri-service-line'];
+                
+                const experienceHtml = `
+                    <div class="experience-links-clean">
+                        ${topExperiences.map((exp, index) => {
+                            const icon = topExperiences.length === 1 ? 'ri-bookmark-line' : icons[index % icons.length];
+                            return `
+                                <a href="${exp.websiteLocation}" target="_blank" class="experience-link-clean">
+                                    <i class="${icon}"></i>
+                                    <span>${exp.name}</span>
+                                    <i class="ri-external-link-line"></i>
+                                </a>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+                addMessage(experienceHtml, "bot");
+            });
+        }
+    }
+}
+
+// --- New function to prompt user to continue to next question ---
+function promptToContinue() {
+    filterTopicIndex++; // Move to the next topic
+    
+    // Check if there are more questions
+    if (filterTopicIndex < filterTopics.length) {
+        const nextTopic = filterTopics[filterTopicIndex];
+        let nextMessage = "";
+        
+        if (nextTopic.key === "credit") {
+            nextMessage = "Let's talk about course credit next.";
+        } else if (nextTopic.key === "location") {
+            nextMessage = "Now, let's think about location.";
+        } else if (nextTopic.key === "timing") {
+            nextMessage = "Finally, let's consider timing.";
+        } else {
+            nextMessage = "Let's continue with the next question.";
+        }
+        
+        queueMessage(nextMessage, "bot", () => {
+            setOptions([
+                { label: "Continue", icon: "arrow-right-line", onClick: chatbotAskFilterTopic, width: "full" },
+                { label: "Start Over", icon: "refresh-line", onClick: chatbotStart }
+            ]);
+        });
+    } else {
+        // End of the flow
+        queueMessage("That's all the questions! You now have a better sense of what's available on campus.", "bot", () => {
+            setOptions([
+                { label: "Start Over", icon: "refresh-line", onClick: chatbotStart, width: "full" },
+                { label: "Internship Hub", icon: "global-line", onClick: () => window.open("https://www.humboldt.edu/internships", "_blank") }
+            ]);
+        });
+    }
+    unlockChatbotUI();
 }
 
 // --- Tag Weights: Make any tag more important by increasing its value here ---

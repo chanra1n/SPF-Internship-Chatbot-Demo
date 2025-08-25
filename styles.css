@@ -1597,6 +1597,220 @@ body {
     filter: none!important;
 }
 
+.show-more-container {
+    margin: -8px;
+    border: none;
+    overflow: hidden;
+    background-color: transparent;
+    border-radius: 20px;
+}
+
+.show-more-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+    font-size: 0.85rem;
+}
+
+.show-more-header:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.show-more-title {
+    font-size: 0.9rem;
+}
+
+.show-more-arrow {
+    font-size: 1rem;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+details[open] .show-more-arrow {
+    transform: rotate(180deg);
+}
+
+.show-more-content {
+    padding: 8px 12px 12px 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.show-more-content .chatbot-office-card-flex {
+    margin: 12px 0;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.show-more-content .chatbot-office-main {
+    padding: 16px;
+}
+
+.show-more-content .chatbot-office-title {
+    margin: 0 0 8px 0;
+    font-size: 1.1rem;
+}
+
+.show-more-content .chatbot-office-body {
+    margin: 0;
+}
+
+.show-more-content .chatbot-office-body p {
+    margin: 0 0 12px 0;
+    line-height: 1.4;
+}
+
+.show-more-content .chatbot-option-btn {
+    margin-bottom: 8px;
+}
+
+.show-more-content .chatbot-office-contact {
+    margin: 12px 0;
+}
+
+.show-more-content .chatbot-office-location {
+    margin: 12px 0;
+}
+
+.show-more-content .chatbot-office-tags {
+    margin: 12px 0 0 0;
+}
+
+.experience-accordion {
+    margin: 8px 0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    overflow: hidden;
+}
+
+.accordion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+}
+
+.accordion-header:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.accordion-title {
+    font-weight: 500;
+    font-size: 0.95rem;
+}
+
+.accordion-arrow {
+    font-size: 1.2rem;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+details[open] .accordion-arrow {
+    transform: rotate(180deg);
+}
+
+.accordion-content {
+    padding: 4px 12px 12px 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.experience-links-clean {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+    margin: 12px 0;
+}
+
+.experience-link-clean {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.experience-link-clean:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+    color: rgba(255, 255, 255, 1);
+}
+
+.experience-link-clean i:first-child {
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.experience-link-clean span {
+    flex: 1;
+}
+
+.experience-link-clean i:last-child {
+    font-size: 14px;
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+
+.experience-simple-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0 0 0;
+}
+
+.experience-simple-links .chatbot-option-btn {
+    text-decoration: none;
+    color: inherit;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    width: auto;
+    min-width: auto;
+    white-space: nowrap;
+}
+
+.experience-simple-links .chatbot-option-btn i:first-child {
+    margin-right: 8px;
+    font-size: 1em;
+}
+
+.experience-simple-links .chatbot-option-btn i:last-child {
+    margin-left: 8px;
+    font-size: 0.9em;
+    opacity: 0.7;
+}
+
+.experience-chips-container .feedback-button {
+    margin: 0;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.experience-links-container .feedback-button:hover {
+    background: rgba(255, 255, 255, 0.1)!important;
+    border-color: rgba(255, 255, 255, 0.2)!important;
+    transform: translateY(-1px);
+}
+
 .desktop-only-message {
     display: none;
     margin-top: 2em;
