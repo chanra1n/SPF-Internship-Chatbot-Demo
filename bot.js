@@ -250,6 +250,12 @@ function addMessage(text, sender = "bot", cb) {
     msgDiv.className = 'chatbot-msg ' + sender;
     const bubble = document.createElement('div');
     bubble.className = 'chatbot-bubble ' + sender;
+
+    // If the content is the horizontal office cards, allow overflow for scrolling
+    if (typeof text === 'string' && text.includes('class="office-cards-horizontal-container"')) {
+        bubble.classList.add('allow-overflow');
+    }
+
     msgDiv.appendChild(bubble);
     msgArea.appendChild(msgDiv);
 
@@ -1658,13 +1664,16 @@ function showFilteredOfficesAndContinue(showAll = false) {
     
     let userTags = [];
     if (chatbotState.major) userTags.push(chatbotState.major.toLowerCase());
-    userTags = userTags.concat(chatbotState.filters);
+    
+    // Only use the latest filter selection, not all accumulated filters
+    const latestFilter = chatbotState.filters[chatbotState.filters.length - 1];
+    if (latestFilter) userTags.push(latestFilter);
 
     let filteredOffices;
     if (showAll) {
         filteredOffices = [...offices]; // Show all offices
     } else {
-        // Find offices that have at least one of the user's tags
+        // Find offices that match the current filter selection
         filteredOffices = offices.filter(office => {
             const officeTags = (office.tags || []).map(t => t.toLowerCase());
             return userTags.some(userTag => officeTags.includes(userTag));
@@ -1707,12 +1716,26 @@ function showFilteredOfficesAndContinue(showAll = false) {
         }
         
         queueMessage(message, "bot", () => {
-            // Display all matching offices normally
+            const msgArea = document.getElementById('chatbot-messages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'chatbot-msg bot';
+
+            // Create horizontal scrollable container for all office cards
+            const container = document.createElement('div');
+            container.className = 'office-cards-horizontal-container';
+
+            // Sort offices by height (approximated by content length)
+            sortedOffices.sort((a, b) => {
+                const aContent = (a.description || a.info || "") + (a.contactName || "") + (a.contactEmail || "") + (a.contactPhone || "") + (a.locationEmbed || "");
+                const bContent = (b.description || b.info || "") + (b.contactName || "") + (b.contactEmail || "") + (b.contactPhone || "") + (b.locationEmbed || "");
+                return bContent.length - aContent.length;
+            });
+
             sortedOffices.forEach(office => {
                 const matchedTags = (office.tags || []).filter(tag =>
                     userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
                 );
-                
+
                 let contactSection = '';
                 if (office.contactName || office.contactEmail || office.contactPhone) {
                     contactSection = `
@@ -1733,30 +1756,33 @@ function showFilteredOfficesAndContinue(showAll = false) {
                     `;
                 }
 
-                // Display each office card
-                let officeCard = `
-                    <div class="chatbot-office-card-flex">
-                        ${office.image ? `<div class="chatbot-office-image-wrap"><img src="${office.image}" alt="${office.name}" class="chatbot-office-image"></div>` : ""}
-                        <div class="chatbot-office-main">
-                            <div class="chatbot-office-header">
-                                <h2 class="chatbot-office-title">${office.name}</h2>
-                            </div>
-                            <div class="chatbot-office-body">
-                                <p>${summarizeInfo(office.description || office.info)}</p>
-                                ${office.link ? `<button class="chatbot-option-btn" style="margin-bottom:0rem;" onclick="window.open('${office.link}', '_blank')">Website<i class="ri-external-link-fill" style="position: absolute;right: 1rem;font-size:1.2rem;"></i></button>` : ""}
-                                ${contactSection}
-                                ${locationSection}
-                                ${matchedTags.length > 0 ? `
-                                    <div class="chatbot-office-tags">
-                                        ${matchedTags.map(tag => `<span class="chatbot-office-tag">${tag}</span>`).join('')}
-                                    </div>
-                                ` : ""}
-                            </div>
+                const card = document.createElement('div');
+                card.className = 'chatbot-office-card-flex office-card-horizontal';
+                card.innerHTML = `
+                    ${office.image ? `<div class="chatbot-office-image-wrap"><img src="${office.image}" alt="${office.name}" class="chatbot-office-image"></div>` : ""}
+                    <div class="chatbot-office-main">
+                        <div class="chatbot-office-header">
+                            <h2 class="chatbot-office-title">${office.name}</h2>
+                        </div>
+                        <div class="chatbot-office-body">
+                            <p>${summarizeInfo(office.description || office.info)}</p>
+                            ${office.link ? `<button class="chatbot-option-btn" style="margin-bottom:0rem;" onclick="window.open('${office.link}', '_blank')">Website<i class="ri-external-link-fill" style="position: absolute;right: 1rem;font-size:1.2rem;"></i></button>` : ""}
+                            ${contactSection}
+                            ${locationSection}
+                            ${matchedTags.length > 0 ? `
+                                <div class="chatbot-office-tags">
+                                    ${matchedTags.map(tag => `<span class="chatbot-office-tag">${tag}</span>`).join('')}
+                                </div>
+                            ` : ""}
                         </div>
                     </div>
                 `;
-                addMessage(officeCard, "bot");
+                container.appendChild(card);
             });
+
+            msgDiv.appendChild(container);
+            msgArea.appendChild(msgDiv);
+            scrollMessagesToBottom();
             
             // Add relevant experience type links based on current filters
             showRelevantExperienceLinks();
@@ -1773,11 +1799,14 @@ function showFilteredOfficesAndContinue(showAll = false) {
 
 // --- New function to show relevant experience type links ---
 function showRelevantExperienceLinks() {
-    // Filter experiences based on user selections to show relevant links
-    const userTags = [...chatbotState.filters];
+    // Only use the latest filter selection for experience links
+    const userTags = [];
     if (chatbotState.major) userTags.push(chatbotState.major.toLowerCase());
     
-    // Find relevant experiences based on user's tags
+    const latestFilter = chatbotState.filters[chatbotState.filters.length - 1];
+    if (latestFilter) userTags.push(latestFilter);
+    
+    // Find relevant experiences based on current filter
     const relevantExperiences = experiences.filter(exp => {
         const expTags = (exp.tags || []).map(t => t.toLowerCase());
         return userTags.some(userTag => expTags.includes(userTag));
@@ -1799,25 +1828,27 @@ function showRelevantExperienceLinks() {
         const topExperiences = sortedExperiences.slice(0, 3);
         
         if (topExperiences.length > 0) {
-            queueMessage(`For more info, check out the following pages.`, "bot", () => {
-                const icons = ['ri-briefcase-line', 'ri-flask-line', 'ri-graduation-cap-line', 'ri-award-line', 'ri-service-line'];
-                
-                const experienceHtml = `
+            const icons = ['ri-briefcase-line', 'ri-flask-line', 'ri-graduation-cap-line', 'ri-award-line', 'ri-service-line'];
+            
+            const experienceHtml = `
+                <div class="experience-message-combined">
+                    <p>For more information, check out the following pages:</p>
+                    <hr class="experience-divider">
                     <div class="experience-links-clean">
                         ${topExperiences.map((exp, index) => {
                             const icon = topExperiences.length === 1 ? 'ri-bookmark-line' : icons[index % icons.length];
                             return `
                                 <a href="${exp.websiteLocation}" target="_blank" class="experience-link-clean">
                                     <i class="${icon}"></i>
-                                    <span>${exp.name}</span>
+                                    <span>${exp.buttonLabel || exp.name}</span>
                                     <i class="ri-external-link-line"></i>
                                 </a>
                             `;
                         }).join('')}
                     </div>
-                `;
-                addMessage(experienceHtml, "bot");
-            });
+                </div>
+            `;
+            addMessage(experienceHtml, "bot");
         }
     }
 }
