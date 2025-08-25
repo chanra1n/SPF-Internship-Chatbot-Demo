@@ -250,12 +250,6 @@ function addMessage(text, sender = "bot", cb) {
     msgDiv.className = 'chatbot-msg ' + sender;
     const bubble = document.createElement('div');
     bubble.className = 'chatbot-bubble ' + sender;
-
-    // If the content is the horizontal office cards, allow overflow for scrolling
-    if (typeof text === 'string' && text.includes('class="office-cards-horizontal-container"')) {
-        bubble.classList.add('allow-overflow');
-    }
-
     msgDiv.appendChild(bubble);
     msgArea.appendChild(msgDiv);
 
@@ -568,21 +562,13 @@ function renderMajorResults(majors, container) {
         const majorLink = document.createElement('a');
         majorLink.className = 'chatbot-option-btn'; // Use the existing button class
         majorLink.href = major.url;
+        majorLink.target = '_blank';
         majorLink.rel = 'noopener noreferrer';
 
         // Style it to have content justified to the start
         majorLink.style.justifyContent = 'space-between';
         majorLink.style.animation = 'none'; // Disable entry animation for search results
         majorLink.style.opacity = '1';
-
-        // On click, clear the options area so static buttons are not left behind
-        majorLink.addEventListener('click', () => {
-            const optArea = document.getElementById('chatbot-options');
-            if (optArea) {
-                optArea.innerHTML = '';
-                optArea.classList.remove('major-search-active');
-            }
-        });
 
         const majorName = document.createElement('span');
         majorName.className = 'chatbot-btn-label';
@@ -864,11 +850,25 @@ function updatePersistentToolbar(topic) {
             lockChatbotUI();
             showLoadingOverlay();
             setTimeout(() => {
+                // Clear selections for the current topic before going back
+                const currentTopic = topicsArr[filterTopicIndex];
+                if (currentTopic && filterSelections[currentTopic.key]) {
+                    delete filterSelections[currentTopic.key];
+                    showFilterTags(); // Update UI
+                }
+
                 filterTopicIndex--;
                 const prevTopic = topicsArr[filterTopicIndex];
-                // Remove last bot message (the "Show Results" step)
-                const msgArea = document.getElementById('chatbot-messages');
-                if (msgArea && msgArea.lastElementChild) {
+                while (msgArea.lastElementChild) {
+                    const last = msgArea.lastElementChild;
+                    const isBotMsg = last.classList.contains('bot');
+                    if (isBotMsg && last.querySelector('.chatbot-bubble')?.textContent === prevTopic.label) {
+                        break;
+                    }
+                    msgArea.removeChild(last);
+                }
+                if (msgArea.lastElementChild && msgArea.lastElementChild.classList.contains('bot') &&
+                    msgArea.lastElementChild.querySelector('.chatbot-bubble')?.textContent === prevTopic.label) {
                     msgArea.removeChild(msgArea.lastElementChild);
                 }
                 queueMessage(prevTopic.label, "bot", () => {
@@ -944,33 +944,35 @@ function updatePersistentToolbar(topic) {
         lockChatbotUI();
         showLoadingOverlay();
         setTimeout(() => {
-            const msgArea = document.getElementById('chatbot-messages');
-            if (msgArea) {
-                filterTopicIndex--;
-                const prevTopic = topicsArr[filterTopicIndex];
-                while (msgArea.lastElementChild) {
-                    const last = msgArea.lastElementChild;
-                    const isBotMsg = last.classList.contains('bot');
-                    if (isBotMsg && last.querySelector('.chatbot-bubble')?.textContent === prevTopic.label) {
-                        break;
-                    }
-                    msgArea.removeChild(last);
-                }
-                if (msgArea.lastElementChild && msgArea.lastElementChild.classList.contains('bot') &&
-                    msgArea.lastElementChild.querySelector('.chatbot-bubble')?.textContent === prevTopic.label) {
-                    msgArea.removeChild(msgArea.lastElementChild);
-                }
-                queueMessage(prevTopic.label, "bot", () => {
-                    if (chatbotState.mode === "faculty" || chatbotState.mode === "community") {
-                        renderGenericFilterScreen(chatbotState.mode, prevTopic);
-                    } else {
-                        renderFilterScreen(prevTopic);
-                    }
-                    hideLoadingOverlay();
-                });
-            } else {
-                hideLoadingOverlay();
+            // Clear selections for the current topic before going back
+            const currentTopic = topicsArr[filterTopicIndex];
+            if (currentTopic && filterSelections[currentTopic.key]) {
+                delete filterSelections[currentTopic.key];
+                showFilterTags(); // Update UI
             }
+
+            filterTopicIndex--;
+            const prevTopic = topicsArr[filterTopicIndex];
+            while (msgArea.lastElementChild) {
+                const last = msgArea.lastElementChild;
+                const isBotMsg = last.classList.contains('bot');
+                if (isBotMsg && last.querySelector('.chatbot-bubble')?.textContent === prevTopic.label) {
+                    break;
+                }
+                msgArea.removeChild(last);
+            }
+            if (msgArea.lastElementChild && msgArea.lastElementChild.classList.contains('bot') &&
+                msgArea.lastElementChild.querySelector('.chatbot-bubble')?.textContent === prevTopic.label) {
+                msgArea.removeChild(msgArea.lastElementChild);
+            }
+            queueMessage(prevTopic.label, "bot", () => {
+                if (chatbotState.mode === "faculty" || chatbotState.mode === "community") {
+                    renderGenericFilterScreen(chatbotState.mode, prevTopic);
+                } else {
+                    renderFilterScreen(prevTopic);
+                }
+                hideLoadingOverlay();
+            });
         }, 500);
     };
 
@@ -1529,7 +1531,7 @@ let filterSelections = {};
 function chatbotAskFilterTopic() {
     // If all topics done, show final message and options
     if (filterTopicIndex >= filterTopics.length) {
-        queueMessage("That's all the questions! You now have a better sense of what's available on campus.", "bot", () => {
+        queueMessage("That's all we have to ask! Feel free to explore the options below.", "bot", () => {
             setOptions([
                 { label: "Start Over", icon: "refresh-line", onClick: chatbotStart, width: "full" },
                 { label: "Internship Hub", icon: "global-line", onClick: () => window.open("https://www.humboldt.edu/internships", "_blank") }
@@ -1602,7 +1604,7 @@ function renderFilterScreen(topic) {
         infoBtn.setAttribute('aria-label', `More info about ${opt.label}`);
         infoBtn.innerHTML = '<i class="ri-information-line" style = "color: var(--ocean-deep);opacity: 50%;"></i>';
         infoBtn.onclick = (e) => {
-            e.stopPropagation(); // Prevent button click
+            e.stopPropagation();
             const def = definitions[opt.value] || `Learn more about ${opt.label.toLowerCase()} opportunities by speaking with an advisor or visiting the relevant campus offices.`;
             showInfoModal(opt.label, def);
         };
@@ -1613,10 +1615,9 @@ function renderFilterScreen(topic) {
             if (chatbotUILocked) return;
             lockChatbotUI();
             queueMessage(opt.label, "user", () => {
-                // Add the selected filter to the main list
-                if (!chatbotState.filters.includes(opt.value)) {
-                    chatbotState.filters.push(opt.value);
-                }
+                // For the student exploratory flow, each question is independent.
+                // We clear previous filters and only use the most recent selection.
+                chatbotState.filters = [opt.value];
                 showFilterTags();
                 showFilteredOfficesAndContinue();
             });
@@ -1664,16 +1665,13 @@ function showFilteredOfficesAndContinue(showAll = false) {
     
     let userTags = [];
     if (chatbotState.major) userTags.push(chatbotState.major.toLowerCase());
-    
-    // Only use the latest filter selection, not all accumulated filters
-    const latestFilter = chatbotState.filters[chatbotState.filters.length - 1];
-    if (latestFilter) userTags.push(latestFilter);
+    userTags = userTags.concat(chatbotState.filters);
 
     let filteredOffices;
     if (showAll) {
         filteredOffices = [...offices]; // Show all offices
     } else {
-        // Find offices that match the current filter selection
+        // Find offices that have at least one of the user's tags
         filteredOffices = offices.filter(office => {
             const officeTags = (office.tags || []).map(t => t.toLowerCase());
             return userTags.some(userTag => officeTags.includes(userTag));
@@ -1693,6 +1691,7 @@ function showFilteredOfficesAndContinue(showAll = false) {
         if (showAll) {
             message = "Here are all the campus offices that can help with experiential learning.";
         } else {
+            showAdvisorBanner();
             const filterName = chatbotState.filters[chatbotState.filters.length - 1]; // Get the latest filter
             if (filterName === "paid") {
                 message = "Great! Here are some offices that can help you find paid opportunities.";
@@ -1716,26 +1715,12 @@ function showFilteredOfficesAndContinue(showAll = false) {
         }
         
         queueMessage(message, "bot", () => {
-            const msgArea = document.getElementById('chatbot-messages');
-            const msgDiv = document.createElement('div');
-            msgDiv.className = 'chatbot-msg bot';
-
-            // Create horizontal scrollable container for all office cards
-            const container = document.createElement('div');
-            container.className = 'office-cards-horizontal-container';
-
-            // Sort offices by height (approximated by content length)
-            sortedOffices.sort((a, b) => {
-                const aContent = (a.description || a.info || "") + (a.contactName || "") + (a.contactEmail || "") + (a.contactPhone || "") + (a.locationEmbed || "");
-                const bContent = (b.description || b.info || "") + (b.contactName || "") + (b.contactEmail || "") + (b.contactPhone || "") + (b.locationEmbed || "");
-                return bContent.length - aContent.length;
-            });
-
+            // Display all matching offices normally
             sortedOffices.forEach(office => {
                 const matchedTags = (office.tags || []).filter(tag =>
                     userTags.some(userTag => tag.toLowerCase() === userTag.toLowerCase())
                 );
-
+                
                 let contactSection = '';
                 if (office.contactName || office.contactEmail || office.contactPhone) {
                     contactSection = `
@@ -1756,33 +1741,30 @@ function showFilteredOfficesAndContinue(showAll = false) {
                     `;
                 }
 
-                const card = document.createElement('div');
-                card.className = 'chatbot-office-card-flex office-card-horizontal';
-                card.innerHTML = `
-                    ${office.image ? `<div class="chatbot-office-image-wrap"><img src="${office.image}" alt="${office.name}" class="chatbot-office-image"></div>` : ""}
-                    <div class="chatbot-office-main">
-                        <div class="chatbot-office-header">
-                            <h2 class="chatbot-office-title">${office.name}</h2>
-                        </div>
-                        <div class="chatbot-office-body">
-                            <p>${summarizeInfo(office.description || office.info)}</p>
-                            ${office.link ? `<button class="chatbot-option-btn" style="margin-bottom:0rem;" onclick="window.open('${office.link}', '_blank')">Website<i class="ri-external-link-fill" style="position: absolute;right: 1rem;font-size:1.2rem;"></i></button>` : ""}
-                            ${contactSection}
-                            ${locationSection}
-                            ${matchedTags.length > 0 ? `
-                                <div class="chatbot-office-tags">
-                                    ${matchedTags.map(tag => `<span class="chatbot-office-tag">${tag}</span>`).join('')}
-                                </div>
-                            ` : ""}
+                // Display each office card
+                let officeCard = `
+                    <div class="chatbot-office-card-flex">
+                        ${office.image ? `<div class="chatbot-office-image-wrap"><img src="${office.image}" alt="${office.name}" class="chatbot-office-image"></div>` : ""}
+                        <div class="chatbot-office-main">
+                            <div class="chatbot-office-header">
+                                <h2 class="chatbot-office-title">${office.name}</h2>
+                            </div>
+                            <div class="chatbot-office-body">
+                                <p>${summarizeInfo(office.description || office.info)}</p>
+                                ${office.link ? `<button class="chatbot-option-btn" style="margin-bottom:0rem;" onclick="window.open('${office.link}', '_blank')">Website<i class="ri-external-link-fill" style="position: absolute;right: 1rem;font-size:1.2rem;"></i></button>` : ""}
+                                ${contactSection}
+                                ${locationSection}
+                                ${matchedTags.length > 0 ? `
+                                    <div class="chatbot-office-tags">
+                                        ${matchedTags.map(tag => `<span class="chatbot-office-tag">${tag}</span>`).join('')}
+                                    </div>
+                                ` : ""}
+                            </div>
                         </div>
                     </div>
                 `;
-                container.appendChild(card);
+                addMessage(officeCard, "bot");
             });
-
-            msgDiv.appendChild(container);
-            msgArea.appendChild(msgDiv);
-            scrollMessagesToBottom();
             
             // Add relevant experience type links based on current filters
             showRelevantExperienceLinks();
@@ -1874,7 +1856,17 @@ function promptToContinue() {
         
         queueMessage(nextMessage, "bot", () => {
             setOptions([
-                { label: "Continue", icon: "arrow-right-line", onClick: chatbotAskFilterTopic, width: "full" },
+                { 
+                    label: "Continue", 
+                    icon: "arrow-right-line", 
+                    onClick: () => {
+                        const msgArea = document.getElementById('chatbot-messages');
+                        if (msgArea) msgArea.innerHTML = '';
+                        chatbotAskFilterTopic();
+                        hideAdvisorBanner();
+                    }, 
+                    width: "full" 
+                },
                 { label: "Start Over", icon: "refresh-line", onClick: chatbotStart }
             ]);
         });
@@ -1883,9 +1875,21 @@ function promptToContinue() {
         queueMessage("That's all the questions! You now have a better sense of what's available on campus.", "bot", () => {
             setOptions([
                 { label: "Start Over", icon: "refresh-line", onClick: chatbotStart, width: "full" },
-                { label: "Internship Hub", icon: "global-line", onClick: () => window.open("https://www.humboldt.edu/internships", "_blank") }
+                { label: "Internship Hub", icon: "external-link-line", onClick: () => window.open("https://www.humboldt.edu/internships", "_blank") }
             ]);
         });
+
+
+                    // Add feedback as a message after setting the options
+            setTimeout(() => {
+                queueMessage(
+                    `<button class="chatbot-option-btn feedback-button" onclick="window.open('https://forms.gle/y3fC1q7sthgipkaFA', '_blank')">
+                        Submit feedback <i class="ri-external-link-line" style="margin-left:0.5em;font-size:1em;"></i>
+                    </button>`,
+                    "bot"
+                );
+            }, 200);
+
     }
     unlockChatbotUI();
 }
